@@ -27,8 +27,8 @@ class Config:
     
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
-    NOISY_TRAIN_DIR = './data/noisy_trainset_wav'  # 👈 Path dataset noisy train
-    CLEAN_TRAIN_DIR = './data/clean_trainset_wav'  # 👈 Path dataset clean train
+    NOISY_TRAIN_DIR = './data/noisy_trainset_wav_16kHz'  # 👈 Path dataset noisy train
+    CLEAN_TRAIN_DIR = './data/clean_trainset_wav_16kHz'  # 👈 Path dataset clean train
     
     # Lazy load: True = load dari disk per batch (hemat RAM), False = load semua ke memory
     LAZY_LOAD = True  # 👈 UBAH DI SINI jika RAM terbatas
@@ -54,8 +54,8 @@ class Config:
     OUTPUT_FILE = 'enhanced_audio.wav'  # 👈 Output file
     
     # Testset mode
-    TEST_NOISY_DIR = './data/noisy_testset_wav'  # 👈 Path testset noisy
-    TEST_CLEAN_DIR = './data/clean_testset_wav'  # 👈 Path testset clean (optional, untuk SNR)
+    TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
+    TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
     TEST_OUTPUT_DIR = './results/enhanced'  # 👈 Output directory
     
     # Model checkpoint untuk testing
