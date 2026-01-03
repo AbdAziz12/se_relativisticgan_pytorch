@@ -22,13 +22,13 @@ class Config:
     # GAN Type: 'lsgan', 'wgan-gp', 'rsgan-gp', 'rasgan-gp', 'ralsgan-gp'
     GAN_TYPE = 'rasgan-gp'  # 👈 UBAH DI SINI
     
-    EPOCHS = 2  # 👈 Jumlah epoch training (asli 81)
-    BATCH_SIZE = 50  # 👈 1-2 untuk laptop, 4-8 untuk PC powerful (asli 100)
+    EPOCHS = 81  # 👈 Jumlah epoch training (asli 81)
+    BATCH_SIZE = 100  # 👈 1-2 untuk laptop, 4-8 untuk PC powerful (asli 100)
     
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
-    NOISY_TRAIN_DIR = './data/noisy_trainset_wav_16kHz'  # 👈 Path dataset noisy train
-    CLEAN_TRAIN_DIR = './data/clean_trainset_wav_16kHz'  # 👈 Path dataset clean train
+    NOISY_TRAIN_DIR = './data/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
+    CLEAN_TRAIN_DIR = './data/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
     
     # Lazy load: True = load dari disk per batch (hemat RAM), False = load semua ke memory
     LAZY_LOAD = True  # 👈 UBAH DI SINI jika RAM terbatas

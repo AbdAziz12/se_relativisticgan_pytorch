@@ -38,7 +38,7 @@ class Generator(nn.Module):
         
         # Output layer
         self.output = nn.Conv1d(base_filters, output_channels, kernel_size=1)
-        self.tanh = nn.Tanh()
+        # self.tanh = nn.Tanh()
         
     def _conv_block(self, in_channels, out_channels, kernel_size, stride):
         padding = kernel_size // 2
@@ -83,7 +83,8 @@ class Generator(nn.Module):
         d2 = self.dec2(torch.cat([d3, e2], dim=1))
         d1 = self.dec1(torch.cat([d2, e1], dim=1))
         
-        output = self.tanh(self.output(d1))
+        # output = self.tanh(self.output(d1))
+        output = self.output(d1)
         return output
 
 
