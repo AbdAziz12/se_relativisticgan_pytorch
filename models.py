@@ -115,7 +115,7 @@ class Discriminator(nn.Module):
         padding = kernel_size // 2
         return nn.Sequential(
             nn.Conv1d(in_channels, out_channels, kernel_size, stride, padding),
-            nn.InstanceNorm1d(out_channels),  # Instance Normalization seperti paper
+            # nn.InstanceNorm1d(out_channels),  # Instance Normalization seperti paper
             nn.LeakyReLU(0.2)
         )
     

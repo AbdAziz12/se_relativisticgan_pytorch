@@ -200,9 +200,9 @@ def test():
             # Save
             print(f"💾 Saving enhanced audio to {Config.OUTPUT_FILE}...")
             save_audio(enhanced_audio, Config.OUTPUT_FILE, sr=Config.SAMPLE_RATE,
-                          apply_deemph=Config.APPLY_PREEMPH,
-                          preemph_coeff=Config.PREEMPH_COEFF)
-            
+                            apply_deemph=Config.APPLY_PREEMPH,
+                            preemph_coeff=Config.PREEMPH_COEFF)
+                
             print("\n" + "="*70)
             print("✅ ENHANCEMENT COMPLETED!")
             print(f"📁 Output saved to: {Config.OUTPUT_FILE}")

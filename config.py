@@ -53,8 +53,8 @@ class Config:
     TEST_MODE = 'testset'  # 👈 'single_file' atau 'testset'
     
     # Single file mode
-    INPUT_FILE = 'p232_007.wav'  # 👈 Input file untuk enhancement
-    OUTPUT_FILE = 'enhanced_audio.wav'  # 👈 Output file
+    INPUT_FILE = './data/noisy_testset_wav_16kHz/p232_007.wav'  # 👈 Input file untuk enhancement
+    OUTPUT_FILE = './enhanced_single_file/enhanced.wav'  # 👈 Output file
     
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
@@ -62,7 +62,7 @@ class Config:
     TEST_OUTPUT_DIR = './results/enhanced'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints/model_rasgan_55.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints/model_rsgan_30.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)

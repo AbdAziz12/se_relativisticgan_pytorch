@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 import os
 import librosa
+import torch.nn.functional as F
 
 from config import Config
 
@@ -189,14 +190,17 @@ class SERGANTrainer:
             
         elif self.gan_type == 'rsgan-gp':
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
-            d_loss = torch.mean((d_real - d_fake - 1) ** 2) + 10 * gp
+            # d_loss = torch.mean((d_real - d_fake - 1) ** 2) + 10 * gp SALAH BOI
+            d_loss = -torch.mean(F.logsigmoid(d_real - d_fake)) + 10 * gp
             
         elif self.gan_type == 'rasgan-gp':
             d_real_mean = torch.mean(d_real)
             d_fake_mean = torch.mean(d_fake)
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
-            d_loss = torch.mean((d_real - d_fake_mean - 1) ** 2) + \
-                     torch.mean((d_fake - d_real_mean + 1) ** 2) + 10 * gp
+            # d_loss = torch.mean((d_real - d_fake_mean - 1) ** 2) + \
+            #          torch.mean((d_fake - d_real_mean + 1) ** 2) + 10 * gp
+            d_loss = -torch.mean(F.logsigmoid(d_real - d_fake_mean)) - \
+                    torch.mean(F.logsigmoid(-(d_fake - d_real_mean))) + 10 * gp
             
         elif self.gan_type == 'ralsgan-gp':
             d_real_mean = torch.mean(d_real)
@@ -217,35 +221,44 @@ class SERGANTrainer:
         fake = self.generator(noisy)
         
         # Discriminator outputs
-        fake_input = torch.cat([fake, noisy], dim=1)
-        d_fake = self.discriminator(fake_input)
+        fake_input_gen = torch.cat([fake, noisy], dim=1)
+        real_input_gen = torch.cat([clean, noisy], dim=1)
+
+        with torch.no_grad():
+            d_real_gen = self.discriminator(real_input_gen)
+        
+        d_fake_gen = self.discriminator(fake_input_gen)
+
         
         # Compute generator loss
         l1_loss = self.l1_loss(fake, clean) * 100  # L1 loss weight
         
         if self.gan_type == 'lsgan':
-            g_loss_adv = torch.mean((d_fake - 1) ** 2)
+            g_loss_adv = torch.mean((d_fake_gen - 1) ** 2)
             
         elif self.gan_type == 'wgan-gp':
-            g_loss_adv = -torch.mean(d_fake)
+            g_loss_adv = -torch.mean(d_fake_gen)
             
         elif self.gan_type == 'rsgan-gp':
-            d_real = self.discriminator(real_input)
-            g_loss_adv = torch.mean((d_fake - d_real + 1) ** 2)
+            # d_real = self.discriminator(real_input)
+            # g_loss_adv = torch.mean((d_fake_gen - d_real_gen + 1) ** 2)
+            g_loss_adv = -torch.mean(F.logsigmoid(d_fake_gen - d_real_gen))
             
         elif self.gan_type == 'rasgan-gp':
-            d_real = self.discriminator(real_input)
-            d_real_mean = torch.mean(d_real)
-            d_fake_mean = torch.mean(d_fake)
-            g_loss_adv = torch.mean((d_fake - d_real_mean - 1) ** 2) + \
-                         torch.mean((d_real - d_fake_mean + 1) ** 2)
+            # d_real = self.discriminator(real_input)
+            d_real_mean_gen = torch.mean(d_real_gen)
+            d_fake_mean_gen = torch.mean(d_fake_gen)
+            # g_loss_adv = torch.mean((d_fake - d_real_mean - 1) ** 2) + \
+            #              torch.mean((d_real - d_fake_mean + 1) ** 2)
+            g_loss_adv = -torch.mean(F.logsigmoid(d_fake_gen - d_real_mean_gen)) - \
+                        torch.mean(F.logsigmoid(-(d_real_gen - d_fake_mean_gen)))
             
         elif self.gan_type == 'ralsgan-gp':
-            d_real = self.discriminator(real_input)
-            d_real_mean = torch.mean(d_real)
-            d_fake_mean = torch.mean(d_fake)
-            g_loss_adv = torch.mean((d_fake - d_real_mean - 1) ** 2) + \
-                         torch.mean((d_real - d_fake_mean + 1) ** 2)
+            # d_real = self.discriminator(real_input)
+            d_real_mean_gen = torch.mean(d_real_gen)
+            d_fake_mean_gen = torch.mean(d_fake_gen)
+            g_loss_adv = torch.mean((d_fake_gen - d_real_mean_gen - 1) ** 2) + \
+                         torch.mean((d_real_gen - d_fake_mean_gen + 1) ** 2)
         
         g_loss = g_loss_adv + l1_loss
         g_loss.backward()
