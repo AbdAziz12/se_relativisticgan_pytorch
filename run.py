@@ -112,7 +112,9 @@ def train():
         save_dir=Config.SAVE_DIR,
         lazy_load=lazy_load,
         apply_preemph=Config.APPLY_PREEMPH,
-        preemph_coeff=Config.PREEMPH_COEFF
+        preemph_coeff=Config.PREEMPH_COEFF,
+        use_spec_loss=Config.USE_SPEC_LOSS,
+        spec_loss_weight=Config.SPEC_LOSS_WEIGHT
     )
     
     # Save final model

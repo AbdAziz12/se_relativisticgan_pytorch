@@ -25,6 +25,9 @@ class Config:
     EPOCHS = 81  # 👈 Jumlah epoch training (asli 81)
     BATCH_SIZE = 100  # 👈 1-2 untuk laptop, 4-8 untuk PC powerful (asli 100)
     
+    USE_SPEC_LOSS = True
+    SPEC_LOSS_WEIGHT = 5.0
+
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
     NOISY_TRAIN_DIR = './data/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
@@ -62,7 +65,7 @@ class Config:
     TEST_OUTPUT_DIR = './results/enhanced'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints/model_rsgan_30.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints/model_rasgan_50.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)
@@ -85,6 +88,9 @@ class Config:
             print(f"  Epochs: {cls.EPOCHS}")
             print(f"  Batch Size: {cls.BATCH_SIZE}")
             print(f"  Lazy Load: {cls.LAZY_LOAD}")
+            print(f"  Spectral Loss: {'Enabled' if cls.USE_SPEC_LOSS else 'Disabled'}")
+            if cls.USE_SPEC_LOSS:
+                print(f"    - Weight: {cls.SPEC_LOSS_WEIGHT}")
             if cls.USE_SAMPLE_DATA:
                 print(f"  Dataset: Sample data ({cls.NUM_SAMPLES} samples)")
             else:

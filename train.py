@@ -109,6 +109,73 @@ class LazyAudioDataset(Dataset):
         
         return noisy_tensor, clean_tensor
 
+# train.py - tambahkan di atas class SERGANTrainer
+class MultiResolutionSTFTLoss(nn.Module):
+    """
+    Multi-resolution STFT loss untuk speech enhancement
+    """
+    def __init__(self, fft_sizes=[512, 256, 128, 64], hop_ratio=0.25, win_ratio=1.0):
+        super().__init__()
+        self.fft_sizes = fft_sizes
+        self.hop_ratio = hop_ratio
+        self.win_ratio = win_ratio
+        
+    def forward(self, x, y):
+        """
+        x: generated speech [batch, 1, samples]
+        y: clean speech [batch, 1, samples]
+        """
+        total_loss = 0.0
+        
+        for fft_size in self.fft_sizes:
+            hop_size = int(fft_size * self.hop_ratio)
+            win_size = int(fft_size * self.win_ratio)
+            
+            # Pastikan panjang cukup untuk STFT
+            if x.size(-1) < win_size:
+                x_padded = F.pad(x, (0, win_size - x.size(-1)))
+                y_padded = F.pad(y, (0, win_size - y.size(-1)))
+            else:
+                x_padded = x
+                y_padded = y
+            
+            # STFT
+            window = torch.hann_window(win_size, device=x.device)
+            
+            X = torch.stft(
+                x_padded.squeeze(1), 
+                n_fft=fft_size, 
+                hop_length=hop_size, 
+                win_length=win_size,
+                window=window, 
+                return_complex=True, 
+                center=False
+            )
+            
+            Y = torch.stft(
+                y_padded.squeeze(1),
+                n_fft=fft_size,
+                hop_length=hop_size,
+                win_length=win_size,
+                window=window,
+                return_complex=True,
+                center=False
+            )
+            
+            # Magnitude spectra
+            mag_X = torch.abs(X)
+            mag_Y = torch.abs(Y)
+            
+            # Log magnitude (lebih robust)
+            log_mag_X = torch.log(mag_X + 1e-7)
+            log_mag_Y = torch.log(mag_Y + 1e-7)
+            
+            # L1 loss pada log magnitude
+            loss_mag = F.l1_loss(log_mag_X, log_mag_Y)
+            
+            total_loss += loss_mag
+        
+        return total_loss / len(self.fft_sizes)
 
 class SERGANTrainer:
     """
@@ -120,11 +187,14 @@ class SERGANTrainer:
     - RaLSGAN-GP: Relativistic average Least Squares GAN with GP
     """
     
-    def __init__(self, generator, discriminator, device, gan_type='rasgan-gp'):
+    def __init__(self, generator, discriminator, device, gan_type='rasgan-gp',
+                 use_spec_loss=True, spec_loss_weight=5.0):
         self.generator = generator.to(device)
         self.discriminator = discriminator.to(device)
         self.device = device
         self.gan_type = gan_type.lower()
+        self.use_spec_loss = use_spec_loss
+        self.spec_loss_weight = spec_loss_weight
         
         # Optimizers
         self.g_optimizer = optim.Adam(self.generator.parameters(), lr=0.0001, betas=(0.5, 0.9))
@@ -132,6 +202,10 @@ class SERGANTrainer:
         
         # Loss functions
         self.l1_loss = nn.L1Loss()
+
+        # Spectral loss (hanya untuk training, BUKAN bagian model)
+        if self.use_spec_loss:
+            self.spec_loss_fn = MultiResolutionSTFTLoss().to(device)
         
     def gradient_penalty(self, real_data, fake_data, noisy_data):
         """Compute gradient penalty untuk WGAN-GP"""
@@ -232,6 +306,11 @@ class SERGANTrainer:
         
         # Compute generator loss
         l1_loss = self.l1_loss(fake, clean) * 100  # L1 loss weight
+
+        # Spectral loss jika diaktifkan
+        spec_loss_value = 0.0
+        if self.use_spec_loss:
+            spec_loss_value = self.spec_loss_fn(fake, clean) * self.spec_loss_weight
         
         if self.gan_type == 'lsgan':
             g_loss_adv = torch.mean((d_fake_gen - 1) ** 2)
@@ -260,16 +339,22 @@ class SERGANTrainer:
             g_loss_adv = torch.mean((d_fake_gen - d_real_mean_gen - 1) ** 2) + \
                          torch.mean((d_real_gen - d_fake_mean_gen + 1) ** 2)
         
-        g_loss = g_loss_adv + l1_loss
+        # Ada spectral loss
+        g_loss = g_loss_adv + l1_loss + spec_loss_value
         g_loss.backward()
         self.g_optimizer.step()
         
-        return {
+        metrics = {
             'd_loss': d_loss.item(),
             'g_loss': g_loss.item(),
             'g_loss_adv': g_loss_adv.item(),
             'l1_loss': l1_loss.item()
         }
+
+        if self.use_spec_loss:
+            metrics['spec_loss'] = spec_loss_value.item()
+        
+        return metrics
     
     def train_epoch(self, dataloader, epoch):
         """Train satu epoch"""
@@ -277,8 +362,13 @@ class SERGANTrainer:
         self.discriminator.train()
         
         pbar = tqdm(dataloader, desc=f'Epoch {epoch}')
-        metrics = {'d_loss': 0, 'g_loss': 0, 'g_loss_adv': 0, 'l1_loss': 0}
+        metrics_keys = {'d_loss': 0, 'g_loss': 0, 'g_loss_adv': 0, 'l1_loss': 0}
         
+        if self.use_spec_loss:
+            metrics_keys.append('spec_loss')
+        
+        metrics = {k: 0 for k in metrics_keys}
+
         for i, (noisy, clean) in enumerate(pbar):
             losses = self.train_step(noisy, clean)
             
@@ -318,7 +408,8 @@ class SERGANTrainer:
 def train_sergan(train_noisy, train_clean, generator, discriminator, 
                  device, gan_type='rasgan-gp', epochs=100, batch_size=4,
                  save_dir='checkpoints', lazy_load=False,
-                 apply_preemph=False, preemph_coeff=0.95):
+                 apply_preemph=False, preemph_coeff=0.95,
+                 use_spec_loss=True, spec_loss_weight=5.0):
     """
     Main training function
     
@@ -348,7 +439,8 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     
     # Create trainer
-    trainer = SERGANTrainer(generator, discriminator, device, gan_type)
+    trainer = SERGANTrainer(generator, discriminator, device, gan_type,
+                            use_spec_loss=use_spec_loss, spec_loss_weight=spec_loss_weight)
     
     # Training loop
     for epoch in range(1, epochs + 1):
@@ -359,6 +451,8 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
         print(f"G Loss: {metrics['g_loss']:.4f}")
         print(f"G Adv Loss: {metrics['g_loss_adv']:.4f}")
         print(f"L1 Loss: {metrics['l1_loss']:.4f}")
+        if use_spec_loss:
+            print(f"Spec Loss: {metrics.get('spec_loss', 0):.4f}")
         
         # Save checkpoint setiap 10 epoch
         if epoch % Config.SAVE_EVERY_N_EPOCHS == 0 or epoch == epochs:

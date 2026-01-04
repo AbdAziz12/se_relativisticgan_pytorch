@@ -233,7 +233,7 @@ def enhance_audio(model, noisy_audio, device, window_size=16384, overlap=0.5):
     window_sum = np.zeros(audio_length)
     
     # Hanning window untuk smooth overlap
-    hann_window = np.hanning(window_size)
+    hann_window = np.hamming(window_size)
     
     with torch.no_grad():
         for start in range(0, audio_length - window_size + 1, hop_size):
