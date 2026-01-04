@@ -7,6 +7,7 @@ from tqdm import tqdm
 import os
 import librosa
 
+from config import Config
 
 class AudioDataset(Dataset):
     """Dataset untuk audio noisy dan clean (data sudah di memory)"""
@@ -39,11 +40,14 @@ class LazyAudioDataset(Dataset):
     Dataset yang load audio dari disk per batch (hemat RAM)
     Cocok untuk dataset besar
     """
-    def __init__(self, noisy_files, clean_files, sr=16000, window_size=16384):
+    def __init__(self, noisy_files, clean_files, sr=16000, window_size=16384,
+                 apply_preemph=False, preemph_coeff=0.95):
         self.noisy_files = noisy_files
         self.clean_files = clean_files
         self.sr = sr
         self.window_size = window_size
+        self.apply_preemph = apply_preemph
+        self.preemph_coeff = preemph_coeff
         
         # Precompute jumlah windows per file
         self.file_windows = []
@@ -75,6 +79,12 @@ class LazyAudioDataset(Dataset):
         # Load audio files
         noisy, _ = librosa.load(str(self.noisy_files[file_idx]), sr=self.sr)
         clean, _ = librosa.load(str(self.clean_files[file_idx]), sr=self.sr)
+
+        # Apply preemphasis if enabled
+        if self.apply_preemph:
+            from utils import pre_emph
+            noisy = pre_emph(noisy, coeff=self.preemph_coeff)
+            clean = pre_emph(clean, coeff=self.preemph_coeff)
         
         # Pastikan panjangnya sama
         min_len = min(len(noisy), len(clean))
@@ -294,7 +304,8 @@ class SERGANTrainer:
 
 def train_sergan(train_noisy, train_clean, generator, discriminator, 
                  device, gan_type='rasgan-gp', epochs=100, batch_size=4,
-                 save_dir='checkpoints', lazy_load=False):
+                 save_dir='checkpoints', lazy_load=False,
+                 apply_preemph=False, preemph_coeff=0.95):
     """
     Main training function
     
@@ -314,7 +325,9 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
     # Create dataset and dataloader
     if lazy_load:
         print("Using LazyAudioDataset (load from disk per batch)")
-        dataset = LazyAudioDataset(train_noisy, train_clean)
+        dataset = LazyAudioDataset(train_noisy, train_clean,
+                                   apply_preemph=apply_preemph,
+                                   preemph_coeff=preemph_coeff)
     else:
         print("Using AudioDataset (all data in memory)")
         dataset = AudioDataset(train_noisy, train_clean)
@@ -335,7 +348,7 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
         print(f"L1 Loss: {metrics['l1_loss']:.4f}")
         
         # Save checkpoint setiap 10 epoch
-        if epoch % 10 == 0:
+        if epoch % Config.SAVE_EVERY_N_EPOCHS == 0 or epoch == epochs:
             checkpoint_path = os.path.join(save_dir, f'checkpoint_epoch_{epoch}.pt')
             trainer.save_checkpoint(checkpoint_path, epoch, metrics)
     

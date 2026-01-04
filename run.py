@@ -36,7 +36,9 @@ def train():
         noisy_data, clean_data = create_sample_data(
             num_samples=Config.NUM_SAMPLES,
             sample_length=Config.WINDOW_SIZE,
-            sr=Config.SAMPLE_RATE
+            sr=Config.SAMPLE_RATE,
+            apply_preemph=Config.APPLY_PREEMPH,
+            preemph_coeff=Config.PREEMPH_COEFF
         )
         lazy_load = False
         print(f"✅ Sample dataset created: {noisy_data.shape}")
@@ -47,7 +49,9 @@ def train():
             Config.CLEAN_TRAIN_DIR, 
             sr=Config.SAMPLE_RATE, 
             window_size=Config.WINDOW_SIZE,
-            lazy_load=Config.LAZY_LOAD
+            lazy_load=Config.LAZY_LOAD,
+            apply_preemph=Config.APPLY_PREEMPH,
+            preemph_coeff=Config.PREEMPH_COEFF
         )
         
         if Config.LAZY_LOAD:
@@ -106,7 +110,9 @@ def train():
         epochs=Config.EPOCHS,
         batch_size=Config.BATCH_SIZE,
         save_dir=Config.SAVE_DIR,
-        lazy_load=lazy_load
+        lazy_load=lazy_load,
+        apply_preemph=Config.APPLY_PREEMPH,
+        preemph_coeff=Config.PREEMPH_COEFF
     )
     
     # Save final model
@@ -130,11 +136,21 @@ def test():
     
     # Get device
     device = get_device(prefer_directml=Config.USE_DIRECTML)
+
+    # 1. HARUS BUAT OBJEK GENERATOR DULU (Sesuai config)
+    if Config.USE_SIMPLE_MODEL:
+        generator = SimpleGenerator(base_filters=Config.BASE_FILTERS).to(device)
+    else:
+        generator = Generator(base_filters=Config.BASE_FILTERS).to(device)
     
     # Load model
     print(f"📂 Loading model from {Config.CHECKPOINT_PATH}...")
     try:
         checkpoint = torch.load(Config.CHECKPOINT_PATH, map_location=device)
+        if isinstance(checkpoint, dict) and 'generator_state_dict' in checkpoint:
+            generator.load_state_dict(checkpoint['generator_state_dict'])
+        else:
+            generator.load_state_dict(checkpoint)
     except FileNotFoundError:
         print(f"❌ Error: Checkpoint file not found at {Config.CHECKPOINT_PATH}")
         print("   Please train a model first or check the path!")
@@ -166,7 +182,9 @@ def test():
         # Single file enhancement
         print(f"\n🎵 Loading noisy audio from {Config.INPUT_FILE}...")
         try:
-            noisy_audio = load_audio(Config.INPUT_FILE, sr=Config.SAMPLE_RATE)
+            noisy_audio = load_audio(Config.INPUT_FILE, sr=Config.SAMPLE_RATE,
+                                        apply_preemph=Config.APPLY_PREEMPH,
+                                        preemph_coeff=Config.PREEMPH_COEFF)
             print(f"   Duration: {len(noisy_audio)/Config.SAMPLE_RATE:.2f} seconds")
             
             # Enhance
@@ -181,7 +199,9 @@ def test():
             
             # Save
             print(f"💾 Saving enhanced audio to {Config.OUTPUT_FILE}...")
-            save_audio(enhanced_audio, Config.OUTPUT_FILE, sr=Config.SAMPLE_RATE)
+            save_audio(enhanced_audio, Config.OUTPUT_FILE, sr=Config.SAMPLE_RATE,
+                          apply_deemph=Config.APPLY_PREEMPH,
+                          preemph_coeff=Config.PREEMPH_COEFF)
             
             print("\n" + "="*70)
             print("✅ ENHANCEMENT COMPLETED!")
@@ -209,7 +229,9 @@ def test():
             device=device,
             sr=Config.SAMPLE_RATE,
             window_size=Config.WINDOW_SIZE,
-            overlap=Config.OVERLAP
+            overlap=Config.OVERLAP,
+            apply_preemph=Config.APPLY_PREEMPH,
+            preemph_coeff=Config.PREEMPH_COEFF
         )
         
         print("\n" + "="*70)

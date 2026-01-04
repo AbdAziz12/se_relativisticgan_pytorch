@@ -8,15 +8,15 @@ class Config:
     
     # =================== MODE OPERASI ===================
     # Pilih mode: 'train' atau 'test'
-    MODE = 'train'  # 👈 UBAH DI SINI: 'train' atau 'test'
+    MODE = 'test'  # 👈 UBAH DI SINI: 'train' atau 'test'
     
     # =================== DEVICE SETTINGS ===================
     USE_DIRECTML = False  # 👈 True untuk AMD/Intel GPU, False untuk CUDA/CPU
     
     # =================== MODEL SETTINGS ===================
     # True = model simple (hemat RAM), False = model full (best quality)
-    USE_SIMPLE_MODEL = True  # 👈 UBAH DI SINI
-    BASE_FILTERS = 8  # 👈 16 untuk full quality, 8 atau 4 untuk hemat memory
+    USE_SIMPLE_MODEL = False  # 👈 UBAH DI SINI
+    BASE_FILTERS = 16  # 👈 16 untuk full quality, 8 atau 4 untuk hemat memory
     
     # =================== TRAINING SETTINGS ===================
     # GAN Type: 'lsgan', 'wgan-gp', 'rsgan-gp', 'rasgan-gp', 'ralsgan-gp'
@@ -31,7 +31,7 @@ class Config:
     CLEAN_TRAIN_DIR = './data/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
     
     # Lazy load: True = load dari disk per batch (hemat RAM), False = load semua ke memory
-    LAZY_LOAD = True  # 👈 UBAH DI SINI jika RAM terbatas
+    LAZY_LOAD = False  # 👈 UBAH DI SINI jika RAM terbatas
     
     # Sample data (jika tidak punya dataset)
     USE_SAMPLE_DATA = False  # 👈 True = pakai sample data untuk testing
@@ -41,6 +41,9 @@ class Config:
     SAMPLE_RATE = 16000
     WINDOW_SIZE = 16384  # 8192 untuk hemat memory, 16384 untuk quality
     OVERLAP = 0.5  # Overlap ratio untuk enhancement
+
+    APPLY_PREEMPH = False
+    PREEMPH_COEFF = 0.95
     
     # =================== SAVE SETTINGS ===================
     SAVE_DIR = 'checkpoints'  # Directory untuk save checkpoints
@@ -50,7 +53,7 @@ class Config:
     TEST_MODE = 'testset'  # 👈 'single_file' atau 'testset'
     
     # Single file mode
-    INPUT_FILE = 'noisy_audio.wav'  # 👈 Input file untuk enhancement
+    INPUT_FILE = 'p232_007.wav'  # 👈 Input file untuk enhancement
     OUTPUT_FILE = 'enhanced_audio.wav'  # 👈 Output file
     
     # Testset mode
@@ -59,10 +62,10 @@ class Config:
     TEST_OUTPUT_DIR = './results/enhanced'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints/final_model.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints/model_rasgan_55.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
-    SAVE_EVERY_N_EPOCHS = 1  # Save checkpoint setiap N epochs (asli 10)
+    SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)
     
     @classmethod
     def print_config(cls):
@@ -74,6 +77,7 @@ class Config:
         print(f"Device: {'DirectML' if cls.USE_DIRECTML else 'CUDA/CPU'}")
         print(f"Model: {'Simple' if cls.USE_SIMPLE_MODEL else 'Full'}")
         print(f"Base Filters: {cls.BASE_FILTERS}")
+        print(f"Preemphasis: {'Enabled' if cls.APPLY_PREEMPH else 'Disabled'} (coeff={cls.PREEMPH_COEFF})")
         
         if cls.MODE == 'train':
             print(f"\nTraining Settings:")

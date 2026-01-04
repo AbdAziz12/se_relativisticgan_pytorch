@@ -4,6 +4,7 @@ import librosa
 import soundfile as sf
 import os
 from pathlib import Path
+from scipy.signal import lfilter
 
 def get_device(prefer_directml=False):
     """
@@ -34,35 +35,85 @@ def get_device(prefer_directml=False):
     return device
 
 
-def load_audio(file_path, sr=16000):
+def pre_emph(x, coeff=0.95):
     """
-    Load audio file
+    Apply pre-emphasis filter: y(t) = x(t) - coeff * x(t-1)
+    
+    Args:
+        x: 1D atau 2D numpy array
+        coeff: preemphasis coefficient
+    """
+    if x.ndim == 1:
+        # 1D array
+        return lfilter([1, -coeff], [1], x)
+    elif x.ndim == 2:
+        # 2D array (batch) - apply per row
+        return np.array([lfilter([1, -coeff], [1], row) for row in x])
+    else:
+        raise ValueError(f"Input must be 1D or 2D, got {x.ndim}D")
+
+
+def de_emph(y, coeff=0.95):
+    """
+    Inverse of pre-emphasis: x(t) = y(t) + coeff * x(t-1)
+    
+    Args:
+        y: 1D atau 2D numpy array
+        coeff: preemphasis coefficient
+    """
+    if coeff <= 0:
+        return y
+    
+    if y.ndim == 1:
+        # 1D array
+        return lfilter([1], [1, -coeff], y)
+    elif y.ndim == 2:
+        # 2D array (batch) - apply per row
+        return np.array([lfilter([1], [1, -coeff], row) for row in y])
+    else:
+        raise ValueError(f"Input must be 1D or 2D, got {y.ndim}D")
+
+
+def load_audio(file_path, sr=16000, apply_preemph=False, preemph_coeff=0.95):
+    """
+    Load audio file dengan optional preemphasis
     
     Args:
         file_path: Path ke audio file
         sr: Sample rate
+        apply_preemph: Jika True, apply preemphasis
+        preemph_coeff: Preemphasis coefficient
     
     Returns:
         numpy array of audio samples
     """
     audio, _ = librosa.load(file_path, sr=sr)
+    
+    if apply_preemph:
+        audio = pre_emph(audio, coeff=preemph_coeff)
+    
     return audio
 
 
-def save_audio(audio, file_path, sr=16000):
+def save_audio(audio, file_path, sr=16000, apply_deemph=False, preemph_coeff=0.95):
     """
-    Save audio file
+    Save audio file dengan optional de-emphasis
     
     Args:
         audio: numpy array atau torch tensor
         file_path: Path untuk save file
         sr: Sample rate
+        apply_deemph: Jika True, apply de-emphasis sebelum save
+        preemph_coeff: Preemphasis coefficient (untuk de-emphasis)
     """
     if isinstance(audio, torch.Tensor):
         audio = audio.cpu().numpy()
     
     if audio.ndim > 1:
         audio = audio.squeeze()
+    
+    if apply_deemph:
+        audio = de_emph(audio, coeff=preemph_coeff)
     
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     sf.write(file_path, audio, sr)
@@ -97,7 +148,8 @@ def preprocess_audio(audio, window_size=16384):
     return windows
 
 
-def prepare_dataset(noisy_dir, clean_dir, sr=16000, window_size=16384, lazy_load=False):
+def prepare_dataset(noisy_dir, clean_dir, sr=16000, window_size=16384, 
+                   lazy_load=False, apply_preemph=False, preemph_coeff=0.95):
     """
     Prepare dataset dari directory
     
@@ -107,6 +159,8 @@ def prepare_dataset(noisy_dir, clean_dir, sr=16000, window_size=16384, lazy_load
         sr: Sample rate
         window_size: Window size untuk splitting
         lazy_load: Jika True, return file paths (hemat RAM). Jika False, load semua ke memory
+        apply_preemph: Jika True, apply preemphasis
+        preemph_coeff: Preemphasis coefficient
     
     Returns:
         Jika lazy_load=False: noisy_data, clean_data (numpy arrays)
@@ -127,13 +181,16 @@ def prepare_dataset(noisy_dir, clean_dir, sr=16000, window_size=16384, lazy_load
     
     # Load semua ke memory
     print("Loading all files to memory...")
+    if apply_preemph:
+        print(f"  Applying preemphasis (coeff={preemph_coeff})")
+    
     noisy_windows = []
     clean_windows = []
     
     for noisy_file, clean_file in zip(noisy_files, clean_files):
         # Load audio
-        noisy_audio = load_audio(str(noisy_file), sr)
-        clean_audio = load_audio(str(clean_file), sr)
+        noisy_audio = load_audio(str(noisy_file), sr, apply_preemph, preemph_coeff)
+        clean_audio = load_audio(str(clean_file), sr, apply_preemph, preemph_coeff)
         
         # Pastikan panjangnya sama
         min_len = min(len(noisy_audio), len(clean_audio))
@@ -297,7 +354,8 @@ class ModelSizeCalculator:
         print(f"{'='*50}\n")
 
 
-def create_sample_data(num_samples=100, sample_length=16384, sr=16000):
+def create_sample_data(num_samples=100, sample_length=16384, sr=16000, 
+                      apply_preemph=False, preemph_coeff=0.95):
     """
     Create sample noisy/clean data untuk testing
     
@@ -305,11 +363,15 @@ def create_sample_data(num_samples=100, sample_length=16384, sr=16000):
         num_samples: Number of samples
         sample_length: Length of each sample
         sr: Sample rate
+        apply_preemph: Jika True, apply preemphasis
+        preemph_coeff: Preemphasis coefficient
     
     Returns:
         noisy_data, clean_data
     """
     print(f"Creating {num_samples} sample audio pairs...")
+    if apply_preemph:
+        print(f"  Applying preemphasis (coeff={preemph_coeff})")
     
     clean_data = []
     noisy_data = []
@@ -324,6 +386,11 @@ def create_sample_data(num_samples=100, sample_length=16384, sr=16000):
         noise = np.random.normal(0, 0.1, sample_length)
         noisy = clean + noise
         
+        # Apply preemphasis if enabled
+        if apply_preemph:
+            clean = pre_emph(clean, coeff=preemph_coeff)
+            noisy = pre_emph(noisy, coeff=preemph_coeff)
+        
         clean_data.append(clean)
         noisy_data.append(noisy)
     
@@ -331,7 +398,8 @@ def create_sample_data(num_samples=100, sample_length=16384, sr=16000):
 
 
 def evaluate_testset(generator, noisy_dir, clean_dir, output_dir, 
-                     device, sr=16000, window_size=16384, overlap=0.5):
+                     device, sr=16000, window_size=16384, overlap=0.5,
+                     apply_preemph=False, preemph_coeff=0.95):
     """
     Evaluate model pada testset
     
@@ -344,12 +412,12 @@ def evaluate_testset(generator, noisy_dir, clean_dir, output_dir,
         sr: Sample rate
         window_size: Window size
         overlap: Overlap ratio
+        apply_preemph: Jika True, apply preemphasis pada input dan de-emphasis pada output
+        preemph_coeff: Preemphasis coefficient
     
     Returns:
         Dictionary dengan evaluation results
     """
-    from pathlib import Path
-    import os
     
     noisy_dir = Path(noisy_dir)
     output_dir = Path(output_dir)
@@ -362,6 +430,8 @@ def evaluate_testset(generator, noisy_dir, clean_dir, output_dir,
         return {'total_files': 0, 'avg_snr_improvement': None}
     
     print(f"Found {len(noisy_files)} test files")
+    if apply_preemph:
+        print(f"Preemphasis enabled (coeff={preemph_coeff})")
     
     # Check if clean dir provided
     calculate_snr_flag = False
@@ -380,8 +450,10 @@ def evaluate_testset(generator, noisy_dir, clean_dir, output_dir,
             try:
                 print(f"Processing: {noisy_file.name}")
                 
-                # Load noisy audio
-                noisy_audio = load_audio(str(noisy_file), sr=sr)
+                # Load noisy audio (with preemphasis if enabled)
+                noisy_audio = load_audio(str(noisy_file), sr=sr, 
+                                        apply_preemph=apply_preemph, 
+                                        preemph_coeff=preemph_coeff)
                 
                 # Enhance
                 enhanced_audio = enhance_audio(
@@ -392,15 +464,20 @@ def evaluate_testset(generator, noisy_dir, clean_dir, output_dir,
                     overlap=overlap
                 )
                 
-                # Save enhanced
+                # Save enhanced (with de-emphasis if preemph was applied)
                 output_path = output_dir / noisy_file.name
-                save_audio(enhanced_audio, str(output_path), sr=sr)
+                save_audio(enhanced_audio, str(output_path), sr=sr,
+                          apply_deemph=apply_preemph,
+                          preemph_coeff=preemph_coeff)
                 
                 # Calculate SNR if clean reference available
                 if calculate_snr_flag:
                     clean_file = clean_dir / noisy_file.name
                     if clean_file.exists():
-                        clean_audio = load_audio(str(clean_file), sr=sr)
+                        # Load clean (with preemphasis to match)
+                        clean_audio = load_audio(str(clean_file), sr=sr,
+                                                apply_preemph=apply_preemph,
+                                                preemph_coeff=preemph_coeff)
                         
                         # Ensure same length
                         min_len = min(len(clean_audio), len(enhanced_audio))
