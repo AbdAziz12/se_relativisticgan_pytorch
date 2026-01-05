@@ -497,7 +497,7 @@ class SERGANTrainer:
 
         # Spectral loss (hanya untuk training, BUKAN bagian model)
         if self.use_spec_loss:
-            self.spec_loss_fn = MultiResolutionSTFTLoss().to(device)
+            self.spec_loss_fn = MultiResolutionSTFTLoss(device=device).to(device)
 
         if self.use_envelope_loss:
             self.envelope_loss_fn = EnvelopeConsistencyLoss(weight=1.0).to(device)
