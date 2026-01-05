@@ -9,8 +9,10 @@ from pathlib import Path
 from config import Config
 
 # Import modules
-from models import Generator, Discriminator, SimpleGenerator, SimpleDiscriminator
-from train import train_sergan
+# from models import Generator, Discriminator, SimpleGenerator, SimpleDiscriminator
+from models_v2 import Generator, Discriminator
+# from train import train_sergan
+from train_v2 import train_sergan
 from utils import (
     get_device, load_audio, save_audio, enhance_audio,
     prepare_dataset, create_sample_data, ModelSizeCalculator,
@@ -65,28 +67,28 @@ def train(resume_from=None):
     
     # Create models
     print("\n🔧 Initializing models...")
-    if Config.USE_SIMPLE_MODEL:
-        print("   Using SIMPLE models (less memory)")
-        generator = SimpleGenerator(
-            input_channels=1, 
-            output_channels=1, 
-            base_filters=Config.BASE_FILTERS
-        )
-        discriminator = SimpleDiscriminator(
-            input_channels=2, 
-            base_filters=Config.BASE_FILTERS
-        )
-    else:
-        print("   Using FULL models (best quality)")
-        generator = Generator(
-            input_channels=1, 
-            output_channels=1, 
-            base_filters=Config.BASE_FILTERS
-        )
-        discriminator = Discriminator(
-            input_channels=2, 
-            base_filters=Config.BASE_FILTERS
-        )
+    # if Config.USE_SIMPLE_MODEL:
+    #     print("   Using SIMPLE models (less memory)")
+    #     generator = SimpleGenerator(
+    #         input_channels=1, 
+    #         output_channels=1, 
+    #         base_filters=Config.BASE_FILTERS
+    #     )
+    #     discriminator = SimpleDiscriminator(
+    #         input_channels=2, 
+    #         base_filters=Config.BASE_FILTERS
+    #     )
+    # else:
+    print("   Using FULL models (best quality)")
+    generator = Generator(
+        input_channels=1, 
+        output_channels=1, 
+        base_filters=Config.BASE_FILTERS
+    )
+    discriminator = Discriminator(
+        input_channels=2, 
+        base_filters=Config.BASE_FILTERS
+    )
     
     # Print model info
     ModelSizeCalculator.print_model_info(generator, "Generator")
@@ -145,10 +147,10 @@ def test():
     device = get_device(prefer_directml=Config.USE_DIRECTML)
 
     # 1. HARUS BUAT OBJEK GENERATOR DULU (Sesuai config)
-    if Config.USE_SIMPLE_MODEL:
-        generator = SimpleGenerator(base_filters=Config.BASE_FILTERS).to(device)
-    else:
-        generator = Generator(base_filters=Config.BASE_FILTERS).to(device)
+    # if Config.USE_SIMPLE_MODEL:
+    #     generator = SimpleGenerator(base_filters=Config.BASE_FILTERS).to(device)
+    # else:
+    generator = Generator(base_filters=Config.BASE_FILTERS).to(device)
     
     # Load model
     print(f"📂 Loading model from {Config.CHECKPOINT_PATH}...")
@@ -164,18 +166,18 @@ def test():
         return
     
     # Create generator
-    if Config.USE_SIMPLE_MODEL:
-        generator = SimpleGenerator(
-            input_channels=1, 
-            output_channels=1,
-            base_filters=Config.BASE_FILTERS
-        )
-    else:
-        generator = Generator(
-            input_channels=1, 
-            output_channels=1,
-            base_filters=Config.BASE_FILTERS
-        )
+    # if Config.USE_SIMPLE_MODEL:
+    #     generator = SimpleGenerator(
+    #         input_channels=1, 
+    #         output_channels=1,
+    #         base_filters=Config.BASE_FILTERS
+    #     )
+    # else:
+    generator = Generator(
+        input_channels=1, 
+        output_channels=1,
+        base_filters=Config.BASE_FILTERS
+    )
     
     generator.load_state_dict(checkpoint['generator_state_dict'])
     generator = generator.to(device)
