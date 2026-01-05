@@ -111,71 +111,228 @@ class LazyAudioDataset(Dataset):
 
 # train.py - tambahkan di atas class SERGANTrainer
 class MultiResolutionSTFTLoss(nn.Module):
+    # """
+    # Multi-resolution STFT loss untuk speech enhancement
+    # """
+    # def __init__(self, fft_sizes=[512, 256, 128, 64], hop_ratio=0.25, win_ratio=1.0):
+    #     super().__init__()
+    #     self.fft_sizes = fft_sizes
+    #     self.hop_ratio = hop_ratio
+    #     self.win_ratio = win_ratio
+        
+    # def forward(self, x, y):
+    #     """
+    #     x: generated speech [batch, 1, samples]
+    #     y: clean speech [batch, 1, samples]
+    #     """
+    #     total_loss = 0.0
+        
+    #     for fft_size in self.fft_sizes:
+    #         hop_size = int(fft_size * self.hop_ratio)
+    #         win_size = int(fft_size * self.win_ratio)
+            
+    #         # Pastikan panjang cukup untuk STFT
+    #         if x.size(-1) < win_size:
+    #             x_padded = F.pad(x, (0, win_size - x.size(-1)))
+    #             y_padded = F.pad(y, (0, win_size - y.size(-1)))
+    #         else:
+    #             x_padded = x
+    #             y_padded = y
+            
+    #         # STFT
+    #         window = torch.hann_window(win_size, device=x.device)
+            
+    #         X = torch.stft(
+    #             x_padded.squeeze(1), 
+    #             n_fft=fft_size, 
+    #             hop_length=hop_size, 
+    #             win_length=win_size,
+    #             window=window, 
+    #             return_complex=True, 
+    #             center=False
+    #         )
+            
+    #         Y = torch.stft(
+    #             y_padded.squeeze(1),
+    #             n_fft=fft_size,
+    #             hop_length=hop_size,
+    #             win_length=win_size,
+    #             window=window,
+    #             return_complex=True,
+    #             center=False
+    #         )
+            
+    #         # Magnitude spectra
+    #         mag_X = torch.abs(X)
+    #         mag_Y = torch.abs(Y)
+            
+    #         # Log magnitude (lebih robust)
+    #         log_mag_X = torch.log(mag_X + 1e-7)
+    #         log_mag_Y = torch.log(mag_Y + 1e-7)
+            
+    #         # L1 loss pada log magnitude
+    #         loss_mag = F.l1_loss(log_mag_X, log_mag_Y)
+            
+    #         total_loss += loss_mag
+        
+    #     return total_loss / len(self.fft_sizes)
+
     """
-    Multi-resolution STFT loss untuk speech enhancement
+    Spectral loss yang juga pertimbangkan phase coherence
     """
-    def __init__(self, fft_sizes=[512, 256, 128, 64], hop_ratio=0.25, win_ratio=1.0):
+    def __init__(self, fft_sizes=[512, 256, 128], mag_weight=0.8, phase_weight=0.2):
         super().__init__()
         self.fft_sizes = fft_sizes
-        self.hop_ratio = hop_ratio
-        self.win_ratio = win_ratio
+        self.mag_weight = mag_weight
+        self.phase_weight = phase_weight
         
     def forward(self, x, y):
-        """
-        x: generated speech [batch, 1, samples]
-        y: clean speech [batch, 1, samples]
-        """
         total_loss = 0.0
         
         for fft_size in self.fft_sizes:
-            hop_size = int(fft_size * self.hop_ratio)
-            win_size = int(fft_size * self.win_ratio)
-            
-            # Pastikan panjang cukup untuk STFT
-            if x.size(-1) < win_size:
-                x_padded = F.pad(x, (0, win_size - x.size(-1)))
-                y_padded = F.pad(y, (0, win_size - y.size(-1)))
-            else:
-                x_padded = x
-                y_padded = y
+            hop_size = fft_size // 4
+            win_size = fft_size
             
             # STFT
-            window = torch.hann_window(win_size, device=x.device)
+            X = torch.stft(x.squeeze(1), n_fft=fft_size, hop_length=hop_size,
+                          win_length=win_size, window=torch.hann_window(win_size).to(x.device),
+                          return_complex=True, center=False)
+            Y = torch.stft(y.squeeze(1), n_fft=fft_size, hop_length=hop_size,
+                          win_length=win_size, window=torch.hann_window(win_size).to(y.device),
+                          return_complex=True, center=False)
             
-            X = torch.stft(
-                x_padded.squeeze(1), 
-                n_fft=fft_size, 
-                hop_length=hop_size, 
-                win_length=win_size,
-                window=window, 
-                return_complex=True, 
-                center=False
-            )
+            # Magnitude loss (di log domain lebih stabil)
+            mag_X = torch.log(torch.abs(X) + 1e-7)
+            mag_Y = torch.log(torch.abs(Y) + 1e-7)
+            mag_loss = F.l1_loss(mag_X, mag_Y)
             
-            Y = torch.stft(
-                y_padded.squeeze(1),
-                n_fft=fft_size,
-                hop_length=hop_size,
-                win_length=win_size,
-                window=window,
-                return_complex=True,
-                center=False
-            )
+            # Phase coherence loss (Group Delay Deviation)
+            # Ini preserve phase structure tanpa terlalu strict
+            phase_X = torch.angle(X)
+            phase_Y = torch.angle(Y)
             
-            # Magnitude spectra
-            mag_X = torch.abs(X)
-            mag_Y = torch.abs(Y)
+            # Group Delay: derivative of phase over time
+            gd_X = phase_X[:, :, 1:] - phase_X[:, :, :-1]
+            gd_Y = phase_Y[:, :, 1:] - phase_Y[:, :, :-1]
+            phase_loss = F.l1_loss(gd_X, gd_Y)
             
-            # Log magnitude (lebih robust)
-            log_mag_X = torch.log(mag_X + 1e-7)
-            log_mag_Y = torch.log(mag_Y + 1e-7)
-            
-            # L1 loss pada log magnitude
-            loss_mag = F.l1_loss(log_mag_X, log_mag_Y)
-            
-            total_loss += loss_mag
+            total_loss += self.mag_weight * mag_loss + self.phase_weight * phase_loss
         
         return total_loss / len(self.fft_sizes)
+    
+class EnvelopeConsistencyLoss(nn.Module):
+    """
+    Loss untuk menjaga consistency energy envelope speech
+    Mencegah transisi 'patah' antara speech dan silence
+    """
+    def __init__(self, sr=16000, frame_size=320, hop_size=160, weight=1.0):
+        """
+        Args:
+            sr: sample rate (default 16000)
+            frame_size: samples per frame (320 = 20ms @ 16kHz)
+            hop_size: hop between frames (160 = 10ms @ 16kHz)
+            weight: loss weight multiplier
+        """
+        super().__init__()
+        self.sr = sr
+        self.frame_size = frame_size
+        self.hop_size = hop_size
+        self.weight = weight
+        
+        # Pre-compute Hann window untuk spectral smoothness
+        self.hann_window = None
+        
+    def compute_energy_envelope(self, x):
+        """
+        Compute RMS energy envelope
+        x: [batch, channels, samples]
+        Returns: [batch, channels, frames]
+        """
+        batch, channels, samples = x.shape
+        
+        # Pastikan panjang cukup
+        if samples < self.frame_size:
+            # Pad if too short
+            x = F.pad(x, (0, self.frame_size - samples))
+            samples = self.frame_size
+        
+        # Unfold into frames
+        x_unfolded = x.unfold(2, self.frame_size, self.hop_size)  # [B, C, frames, frame_size]
+        
+        # RMS energy per frame
+        energy = torch.sqrt(torch.mean(x_unfolded ** 2, dim=3) + 1e-10)
+        
+        return energy
+    
+    def compute_spectral_envelope(self, x):
+        """
+        Compute spectral envelope (magnitude spectrum)
+        """
+        batch, channels, samples = x.shape
+        
+        if self.hann_window is None:
+            self.hann_window = torch.hann_window(self.frame_size).to(x.device)
+        
+        # STFT parameters
+        n_fft = self.frame_size
+        hop_length = self.hop_size
+        
+        # Compute STFT magnitude
+        x_stft = torch.stft(x.squeeze(1), n_fft=n_fft, hop_length=hop_length,
+                           win_length=self.frame_size, window=self.hann_window,
+                           return_complex=True, center=False)
+        
+        mag = torch.abs(x_stft)  # [batch, freq_bins, time_frames]
+        
+        return mag
+    
+    def forward(self, enhanced, clean):
+        """
+        Args:
+            enhanced: enhanced audio [batch, 1, samples]
+            clean: clean reference [batch, 1, samples]
+        """
+        # 1. Energy envelope loss (RMS per frame)
+        enhanced_energy = self.compute_energy_envelope(enhanced)  # [B, C, frames]
+        clean_energy = self.compute_energy_envelope(clean)
+        
+        # Normalize energy untuk fokus pada shape, bukan magnitude
+        enhanced_norm = enhanced_energy / (torch.mean(enhanced_energy, dim=2, keepdim=True) + 1e-10)
+        clean_norm = clean_energy / (torch.mean(clean_energy, dim=2, keepdim=True) + 1e-10)
+        
+        # Energy shape loss
+        energy_loss = F.l1_loss(enhanced_norm, clean_norm)
+        
+        # 2. Energy smoothness loss (perubahan gradual)
+        enhanced_diff = enhanced_norm[:, :, 1:] - enhanced_norm[:, :, :-1]
+        clean_diff = clean_norm[:, :, 1:] - clean_norm[:, :, :-1]
+        smoothness_loss = F.l1_loss(enhanced_diff, clean_diff)
+        
+        # 3. Attack/decay consistency (transients)
+        # Hitung attack (rising) dan decay (falling) rates
+        enhanced_pos_diff = torch.relu(enhanced_diff)  # Only positive changes (attack)
+        clean_pos_diff = torch.relu(clean_diff)
+        enhanced_neg_diff = torch.relu(-enhanced_diff)  # Only negative changes (decay)
+        clean_neg_diff = torch.relu(-clean_diff)
+        
+        attack_loss = F.l1_loss(enhanced_pos_diff, clean_pos_diff)
+        decay_loss = F.l1_loss(enhanced_neg_diff, clean_neg_diff)
+        
+        # 4. Dynamic range preservation
+        enhanced_dr = torch.max(enhanced_energy, dim=2)[0] - torch.min(enhanced_energy, dim=2)[0]
+        clean_dr = torch.max(clean_energy, dim=2)[0] - torch.min(clean_energy, dim=2)[0]
+        dr_loss = F.l1_loss(enhanced_dr, clean_dr)
+        
+        # Combine losses dengan weights
+        total_loss = (
+            energy_loss * 0.4 +
+            smoothness_loss * 0.3 +
+            attack_loss * 0.15 +
+            decay_loss * 0.1 +
+            dr_loss * 0.05
+        )
+        
+        return total_loss * self.weight
 
 class SERGANTrainer:
     """
@@ -188,13 +345,16 @@ class SERGANTrainer:
     """
     
     def __init__(self, generator, discriminator, device, gan_type='rasgan-gp',
-                 use_spec_loss=True, spec_loss_weight=1.0):
+                 use_spec_loss=True, spec_loss_weight=0.3,
+                 use_envelope_loss=False, envelope_loss_weight=0.02):
         self.generator = generator.to(device)
         self.discriminator = discriminator.to(device)
         self.device = device
         self.gan_type = gan_type.lower()
         self.use_spec_loss = use_spec_loss
         self.spec_loss_weight = spec_loss_weight
+        self.use_envelope_loss = use_envelope_loss
+        self.envelope_loss_weight = envelope_loss_weight
         
         # Optimizers
         self.g_optimizer = optim.Adam(self.generator.parameters(), lr=0.0001, betas=(0.5, 0.9))
@@ -206,6 +366,10 @@ class SERGANTrainer:
         # Spectral loss (hanya untuk training, BUKAN bagian model)
         if self.use_spec_loss:
             self.spec_loss_fn = MultiResolutionSTFTLoss().to(device)
+
+        if self.use_envelope_loss:
+            self.envelope_loss_fn = EnvelopeConsistencyLoss(weight=1.0).to(device)
+            print(f"✓ Envelope loss enabled (weight: {envelope_loss_weight})")
         
     def gradient_penalty(self, real_data, fake_data, noisy_data):
         """Compute gradient penalty untuk WGAN-GP"""
@@ -305,12 +469,17 @@ class SERGANTrainer:
 
         
         # Compute generator loss
-        l1_loss = self.l1_loss(fake, clean) * 100  # L1 loss weight
+        l1_loss = self.l1_loss(fake, clean) * 200  # L1 loss weight
 
         # Spectral loss jika diaktifkan
         spec_loss_value = 0.0
         if self.use_spec_loss:
             spec_loss_value = self.spec_loss_fn(fake, clean) * self.spec_loss_weight
+        
+        # Envelope loss
+        envelope_loss_value = 0.0
+        if self.use_envelope_loss:
+            envelope_loss_value = self.envelope_loss_fn(fake, clean) * self.envelope_loss_weight
         
         if self.gan_type == 'lsgan':
             g_loss_adv = torch.mean((d_fake_gen - 1) ** 2)
@@ -340,7 +509,7 @@ class SERGANTrainer:
                          torch.mean((d_real_gen - d_fake_mean_gen + 1) ** 2)
         
         # Ada spectral loss
-        g_loss = g_loss_adv + l1_loss + spec_loss_value
+        g_loss = g_loss_adv + l1_loss + spec_loss_value + envelope_loss_value
         g_loss.backward()
         self.g_optimizer.step()
         
@@ -354,6 +523,9 @@ class SERGANTrainer:
         if self.use_spec_loss:
             metrics['spec_loss'] = spec_loss_value.item()
         
+        if self.use_envelope_loss:
+            metrics['env_loss'] = envelope_loss_value.item()
+        
         return metrics
     
     def train_epoch(self, dataloader, epoch):
@@ -366,6 +538,9 @@ class SERGANTrainer:
         
         if self.use_spec_loss:
             metrics['spec_loss'] = 0
+        
+        if self.use_envelope_loss:
+            metrics['env_loss'] = 0
 
         for i, (noisy, clean) in enumerate(pbar):
             losses = self.train_step(noisy, clean)
@@ -408,7 +583,8 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
                  save_dir='checkpoints', lazy_load=False,
                  apply_preemph=False, preemph_coeff=0.95,
                  use_spec_loss=True, spec_loss_weight=5.0,
-                 checkpoint_path=None):
+                 checkpoint_path=None,
+                 use_envelope_loss=False, envelope_loss_weight=0.02):
     """
     Main training function
     
@@ -439,7 +615,9 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
     
     # Create trainer
     trainer = SERGANTrainer(generator, discriminator, device, gan_type,
-                            use_spec_loss=use_spec_loss, spec_loss_weight=spec_loss_weight)
+                            use_spec_loss=use_spec_loss, spec_loss_weight=spec_loss_weight,
+                            use_envelope_loss=use_envelope_loss,
+                            envelope_loss_weight=envelope_loss_weight)
     
     # Training loop
     start_epoch = 1

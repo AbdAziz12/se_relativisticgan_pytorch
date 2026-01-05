@@ -117,7 +117,9 @@ def train(resume_from=None):
         preemph_coeff=Config.PREEMPH_COEFF,
         use_spec_loss=Config.USE_SPEC_LOSS,
         spec_loss_weight=Config.SPEC_LOSS_WEIGHT,
-        checkpoint_path=resume_from
+        checkpoint_path=resume_from,
+        use_envelope_loss=Config.USE_ENVELOPE_LOSS,
+        envelope_loss_weight=Config.ENVELOPE_LOSS_WEIGHT
     )
     
     # Save final model
