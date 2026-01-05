@@ -23,13 +23,13 @@ class Config:
     GAN_TYPE = 'rasgan-gp'  # 👈 UBAH DI SINI
     
     EPOCHS = 81  # 👈 Jumlah epoch training (asli 81)
-    BATCH_SIZE = 100  # 👈 1-2 untuk laptop, 4-8 untuk PC powerful (asli 100)
+    BATCH_SIZE = 32  # 👈 (asli 100)
     
     USE_SPEC_LOSS = True
     SPEC_LOSS_WEIGHT = 0.3
 
-    USE_ENVELOPE_LOSS = True  # 👈 Aktifkan envelope loss
-    ENVELOPE_LOSS_WEIGHT = 0.02  # 👈 Start dengan 0.02 (2% dari L1 weight)
+    USE_ENVELOPE_LOSS = False  # 👈 Aktifkan envelope loss
+    ENVELOPE_LOSS_WEIGHT = 0.05  # 👈 Start dengan 0.04 (2% dari L1 weight 200)
 
     # Resume Training
     RESUME_FROM = None
@@ -64,15 +64,15 @@ class Config:
     
     # Single file mode
     INPUT_FILE = './my_speech_pink.wav'  # 👈 Input file untuk enhancement
-    OUTPUT_FILE = './enhanced_single_file/model_rasgan_75_spec_pink.wav'  # 👈 Output file
+    OUTPUT_FILE = './enhanced_single_file/model_rasgan_60_temp_pink.wav'  # 👈 Output file
     
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/enhanced_model_rasgan_75_spec'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/enhanced_model_rasgan_60_temp'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints/model_rasgan_75_spec.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints/model_rasgan_60_temp.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)

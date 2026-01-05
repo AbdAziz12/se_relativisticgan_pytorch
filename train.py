@@ -357,7 +357,7 @@ class SERGANTrainer:
         self.envelope_loss_weight = envelope_loss_weight
         
         # Optimizers
-        self.g_optimizer = optim.Adam(self.generator.parameters(), lr=0.0001, betas=(0.5, 0.9))
+        self.g_optimizer = optim.Adam(self.generator.parameters(), lr=0.0002, betas=(0.5, 0.9))
         self.d_optimizer = optim.Adam(self.discriminator.parameters(), lr=0.0001, betas=(0.5, 0.9))
         
         # Loss functions
@@ -469,7 +469,7 @@ class SERGANTrainer:
 
         
         # Compute generator loss
-        l1_loss = self.l1_loss(fake, clean) * 200  # L1 loss weight
+        l1_loss = self.l1_loss(fake, clean) * 100  # L1 loss weight
 
         # Spectral loss jika diaktifkan
         spec_loss_value = 0.0
@@ -638,6 +638,8 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
         print(f"L1 Loss: {metrics['l1_loss']:.4f}")
         if use_spec_loss:
             print(f"Spec Loss: {metrics.get('spec_loss', 0):.4f}")
+        if use_envelope_loss:
+            print(f"Spec Loss: {metrics.get('env_loss', 0):.4f}")
         
         # Save checkpoint setiap N epoch
         if epoch % Config.SAVE_EVERY_N_EPOCHS == 0 or epoch == epochs:
