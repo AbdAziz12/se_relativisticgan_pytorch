@@ -26,7 +26,10 @@ class Config:
     BATCH_SIZE = 100  # 👈 1-2 untuk laptop, 4-8 untuk PC powerful (asli 100)
     
     USE_SPEC_LOSS = True
-    SPEC_LOSS_WEIGHT = 5.0
+    SPEC_LOSS_WEIGHT = 1.0
+
+    # Resume Training
+    RESUME_FROM = None
 
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
@@ -56,16 +59,16 @@ class Config:
     TEST_MODE = 'testset'  # 👈 'single_file' atau 'testset'
     
     # Single file mode
-    INPUT_FILE = './data/noisy_testset_wav_16kHz/p232_007.wav'  # 👈 Input file untuk enhancement
+    INPUT_FILE = './my_speech_pink.wav'  # 👈 Input file untuk enhancement
     OUTPUT_FILE = './enhanced_single_file/enhanced.wav'  # 👈 Output file
     
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/enhanced'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/enhanced_model_80'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints/model_rasgan_50.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints/model_rasgan_spec_80.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)

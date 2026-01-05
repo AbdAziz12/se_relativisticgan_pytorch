@@ -188,7 +188,7 @@ class SERGANTrainer:
     """
     
     def __init__(self, generator, discriminator, device, gan_type='rasgan-gp',
-                 use_spec_loss=True, spec_loss_weight=5.0):
+                 use_spec_loss=True, spec_loss_weight=1.0):
         self.generator = generator.to(device)
         self.discriminator = discriminator.to(device)
         self.device = device
@@ -362,12 +362,10 @@ class SERGANTrainer:
         self.discriminator.train()
         
         pbar = tqdm(dataloader, desc=f'Epoch {epoch}')
-        metrics_keys = {'d_loss': 0, 'g_loss': 0, 'g_loss_adv': 0, 'l1_loss': 0}
+        metrics = {'d_loss': 0, 'g_loss': 0, 'g_loss_adv': 0, 'l1_loss': 0}
         
         if self.use_spec_loss:
-            metrics_keys.append('spec_loss')
-        
-        metrics = {k: 0 for k in metrics_keys}
+            metrics['spec_loss'] = 0
 
         for i, (noisy, clean) in enumerate(pbar):
             losses = self.train_step(noisy, clean)
@@ -409,7 +407,8 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
                  device, gan_type='rasgan-gp', epochs=100, batch_size=4,
                  save_dir='checkpoints', lazy_load=False,
                  apply_preemph=False, preemph_coeff=0.95,
-                 use_spec_loss=True, spec_loss_weight=5.0):
+                 use_spec_loss=True, spec_loss_weight=5.0,
+                 checkpoint_path=None):
     """
     Main training function
     
@@ -443,7 +442,15 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
                             use_spec_loss=use_spec_loss, spec_loss_weight=spec_loss_weight)
     
     # Training loop
-    for epoch in range(1, epochs + 1):
+    start_epoch = 1
+    if checkpoint_path:
+        print(f"📂 Loading checkpoint from {checkpoint_path}...")
+        loaded_epoch, loaded_metrics = trainer.load_checkpoint(checkpoint_path)
+        start_epoch = loaded_epoch + 1
+        print(f"🔄 Resuming training from epoch {start_epoch}")
+    
+    # Training loop
+    for epoch in range(start_epoch, epochs + 1):  # 👈 Mulai dari start_epoch
         metrics = trainer.train_epoch(dataloader, epoch)
         
         print(f"\nEpoch {epoch}/{epochs}")
@@ -454,7 +461,7 @@ def train_sergan(train_noisy, train_clean, generator, discriminator,
         if use_spec_loss:
             print(f"Spec Loss: {metrics.get('spec_loss', 0):.4f}")
         
-        # Save checkpoint setiap 10 epoch
+        # Save checkpoint setiap N epoch
         if epoch % Config.SAVE_EVERY_N_EPOCHS == 0 or epoch == epochs:
             checkpoint_path = os.path.join(save_dir, f'checkpoint_epoch_{epoch}.pt')
             trainer.save_checkpoint(checkpoint_path, epoch, metrics)

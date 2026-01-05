@@ -18,7 +18,7 @@ from utils import (
 )
 
 
-def train():
+def train(resume_from=None):
     """Training function"""
     print("="*70)
     print("SERGAN TRAINING")
@@ -94,6 +94,8 @@ def train():
     
     # Train
     print(f"🚀 Starting training...")
+    if resume_from:
+        print(f"   Resume from checkpoint: {resume_from}")
     print(f"   GAN Type: {Config.GAN_TYPE}")
     print(f"   Epochs: {Config.EPOCHS}")
     print(f"   Batch Size: {Config.BATCH_SIZE}")
@@ -114,7 +116,8 @@ def train():
         apply_preemph=Config.APPLY_PREEMPH,
         preemph_coeff=Config.PREEMPH_COEFF,
         use_spec_loss=Config.USE_SPEC_LOSS,
-        spec_loss_weight=Config.SPEC_LOSS_WEIGHT
+        spec_loss_weight=Config.SPEC_LOSS_WEIGHT,
+        checkpoint_path=resume_from
     )
     
     # Save final model
@@ -250,7 +253,7 @@ if __name__ == '__main__':
     import torch
     
     if Config.MODE == 'train':
-        train()
+        train(resume_from=Config.RESUME_FROM)
     elif Config.MODE == 'test':
         test()
     else:
