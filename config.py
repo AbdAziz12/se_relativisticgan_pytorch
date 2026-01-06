@@ -23,10 +23,10 @@ class Config:
     GAN_TYPE = 'rasgan-gp'  # 👈 UBAH DI SINI
     
     EPOCHS = 81  # 👈 Jumlah epoch training (asli 81)
-    BATCH_SIZE = 64  # 👈 (asli 100)
+    BATCH_SIZE = 128  # 👈 (asli 100)
     
-    USE_SPEC_LOSS = True
-    SPEC_LOSS_WEIGHT = 0.2
+    USE_SPEC_LOSS = False
+    SPEC_LOSS_WEIGHT = 0.5
 
     USE_ENVELOPE_LOSS = False  # 👈 Aktifkan envelope loss
     ENVELOPE_LOSS_WEIGHT = 0.05  # 👈 Start dengan 0.04 (2% dari L1 weight 200)
@@ -48,7 +48,7 @@ class Config:
     
     # =================== AUDIO SETTINGS ===================
     SAMPLE_RATE = 16000
-    WINDOW_SIZE = 16384  # 8192 untuk hemat memory, 16384 untuk quality
+    WINDOW_SIZE = 4096  # 8192 untuk hemat memory, 16384 untuk quality
     OVERLAP = 0.5  # Overlap ratio untuk enhancement
 
     APPLY_PREEMPH = False
@@ -69,10 +69,10 @@ class Config:
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/model_v2/model_rasgan_res_60'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/simple/simple_rasgan_spec_50'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints_exp/model_v2_rasgan_res_60.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints_simple_spec/simple_rasgan_spec_50.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)

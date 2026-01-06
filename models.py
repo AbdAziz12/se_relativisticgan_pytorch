@@ -185,6 +185,7 @@ class SimpleGenerator(nn.Module):
         e5 = self.enc5(e4)
 
         b = self.bottleneck(e5)  # bottleneck opsional
+        b = b + e5
         
         d5 = self.dec5(b)
         d4 = self.dec4(torch.cat([d5, e4], 1))

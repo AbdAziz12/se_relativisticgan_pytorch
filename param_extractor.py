@@ -353,7 +353,7 @@ def main():
     Contoh penggunaan
     """
     # Path ke checkpoint
-    checkpoint_path = 'checkpoints/model_rasgan_50.pt'
+    checkpoint_path = 'checkpoints_simple_spec/simple_rasgan_spec_50.pt'
     
     # Cek apakah file ada
     if not os.path.exists(checkpoint_path):

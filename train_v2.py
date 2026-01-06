@@ -490,7 +490,7 @@ class SERGANTrainer:
         
         # Optimizers
         self.g_optimizer = optim.Adam(self.generator.parameters(), lr=0.0002, betas=(0.5, 0.9))
-        self.d_optimizer = optim.Adam(self.discriminator.parameters(), lr=0.0001, betas=(0.5, 0.9))
+        self.d_optimizer = optim.Adam(self.discriminator.parameters(), lr=0.0002, betas=(0.5, 0.9))
         
         # Loss functions
         self.l1_loss = nn.L1Loss()
@@ -567,7 +567,7 @@ class SERGANTrainer:
             d_fake_mean = torch.mean(d_fake)
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
             d_loss = -torch.mean(F.logsigmoid(d_real - d_fake_mean)) - \
-                    torch.mean(F.logsigmoid(-(d_fake - d_real_mean))) + 5 * gp
+                    torch.mean(F.logsigmoid(-(d_fake - d_real_mean))) + 3 * gp
             
         elif self.gan_type == 'ralsgan-gp':
             d_real_mean = torch.mean(d_real)
