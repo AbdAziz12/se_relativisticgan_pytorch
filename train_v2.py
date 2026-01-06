@@ -556,25 +556,25 @@ class SERGANTrainer:
             
         elif self.gan_type == 'wgan-gp':
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
-            d_loss = -torch.mean(d_real) + torch.mean(d_fake) + 3 * gp # Sesuaikan weight gp: 10 * (l1_loss / 200) * sqrt(batch/100)
+            d_loss = -torch.mean(d_real) + torch.mean(d_fake) + 5 * gp # Sesuaikan weight gp: 10 * (l1_loss / 200) * sqrt(batch/100)
             
         elif self.gan_type == 'rsgan-gp':
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
-            d_loss = -torch.mean(F.logsigmoid(d_real - d_fake)) + 3 * gp
+            d_loss = -torch.mean(F.logsigmoid(d_real - d_fake)) + 5 * gp
             
         elif self.gan_type == 'rasgan-gp':
             d_real_mean = torch.mean(d_real)
             d_fake_mean = torch.mean(d_fake)
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
             d_loss = -torch.mean(F.logsigmoid(d_real - d_fake_mean)) - \
-                    torch.mean(F.logsigmoid(-(d_fake - d_real_mean))) + 3 * gp
+                    torch.mean(F.logsigmoid(-(d_fake - d_real_mean))) + 5 * gp
             
         elif self.gan_type == 'ralsgan-gp':
             d_real_mean = torch.mean(d_real)
             d_fake_mean = torch.mean(d_fake)
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
             d_loss = torch.mean((d_real - d_fake_mean - 1) ** 2) + \
-                     torch.mean((d_fake - d_real_mean + 1) ** 2) + 3 * gp
+                     torch.mean((d_fake - d_real_mean + 1) ** 2) + 5 * gp
         else:
             raise ValueError(f"Unknown GAN type: {self.gan_type}")
         
