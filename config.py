@@ -26,7 +26,7 @@ class Config:
     BATCH_SIZE = 64  # 👈 (asli 100)
     
     USE_SPEC_LOSS = True
-    SPEC_LOSS_WEIGHT = 0.2
+    SPEC_LOSS_WEIGHT = 0.3
 
     USE_ENVELOPE_LOSS = False  # 👈 Aktifkan envelope loss
     ENVELOPE_LOSS_WEIGHT = 0.05  # 👈 Start dengan 0.04 (2% dari L1 weight 200)

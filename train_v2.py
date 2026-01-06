@@ -556,7 +556,7 @@ class SERGANTrainer:
             
         elif self.gan_type == 'wgan-gp':
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
-            d_loss = -torch.mean(d_real) + torch.mean(d_fake) + 5 * gp # Sesuaikan weight gp: 10 * (l1_loss / 200) * sqrt(batch/100)
+            d_loss = -torch.mean(d_real) + torch.mean(d_fake) + 5 * gp # Sesuaikan weight gp: 10 * (l1_loss / 200)
             
         elif self.gan_type == 'rsgan-gp':
             gp = self.gradient_penalty(clean, fake.detach(), noisy)
