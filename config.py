@@ -59,8 +59,8 @@ class Config:
     
     # =================== TESTING SETTINGS ===================
     # Pilih mode testing: 'single_file' atau 'testset'
-    TEST_MODE = 'single_file'
-    # TEST_MODE = 'testset'
+    # TEST_MODE = 'single_file'
+    TEST_MODE = 'testset'
     
     # Single file mode
     INPUT_FILE = './my_speech_pink.wav'  # 👈 Input file untuk enhancement
@@ -69,10 +69,10 @@ class Config:
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/model_v2/model_rasgan_10_v2'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/model_v2/model_rasgan_70'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints_exp/model_rasgan_10_v2.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints_exp/model_v2_rasgan_70.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)
