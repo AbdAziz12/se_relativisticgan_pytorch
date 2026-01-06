@@ -144,23 +144,26 @@ class SimpleGenerator(nn.Module):
     """
     def __init__(self, input_channels=1, output_channels=1, base_filters=16):
         super(SimpleGenerator, self).__init__()
-        
+        # kernel size bisa dibuat 31
         # Encoder
-        self.enc1 = self._conv_block(input_channels, base_filters, 31, 2)
-        self.enc2 = self._conv_block(base_filters, base_filters * 2, 31, 2)
-        self.enc3 = self._conv_block(base_filters * 2, base_filters * 4, 31, 2)
-        self.enc4 = self._conv_block(base_filters * 4, base_filters * 8, 31, 2)
-        self.enc5 = self._conv_block(base_filters * 8, base_filters * 16, 31, 2)
+        self.enc1 = self._conv_block(input_channels, base_filters, 15, 2)
+        self.enc2 = self._conv_block(base_filters, base_filters * 2, 15, 2)
+        self.enc3 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2)
+        self.enc4 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2)
+        self.enc5 = self._conv_block(base_filters * 8, base_filters * 16, 15, 2)
         
+        # Bottleneck (opsional, untuk kompresi lebih)
+        self.bottleneck = self._conv_block(base_filters * 16, base_filters * 16, 15, 1)
+
         # Decoder
-        self.dec5 = self._deconv_block(base_filters * 16, base_filters * 8, 31, 2)
-        self.dec4 = self._deconv_block(base_filters * 16, base_filters * 4, 31, 2)
-        self.dec3 = self._deconv_block(base_filters * 8, base_filters * 2, 31, 2)
-        self.dec2 = self._deconv_block(base_filters * 4, base_filters, 31, 2)
-        self.dec1 = self._deconv_block(base_filters * 2, base_filters, 31, 2)
+        self.dec5 = self._deconv_block(base_filters * 16, base_filters * 8, 15, 2)
+        self.dec4 = self._deconv_block(base_filters * 16, base_filters * 4, 15, 2)
+        self.dec3 = self._deconv_block(base_filters * 8, base_filters * 2, 15, 2)
+        self.dec2 = self._deconv_block(base_filters * 4, base_filters, 15, 2)
+        self.dec1 = self._deconv_block(base_filters * 2, base_filters, 15, 2)
         
         self.output = nn.Conv1d(base_filters, output_channels, 1)
-        self.tanh = nn.Tanh()
+        # self.tanh = nn.Tanh()
         
     def _conv_block(self, in_c, out_c, k, s):
         return nn.Sequential(
@@ -180,14 +183,17 @@ class SimpleGenerator(nn.Module):
         e3 = self.enc3(e2)
         e4 = self.enc4(e3)
         e5 = self.enc5(e4)
+
+        b = self.bottleneck(e5)  # bottleneck opsional
         
-        d5 = self.dec5(e5)
+        d5 = self.dec5(b)
         d4 = self.dec4(torch.cat([d5, e4], 1))
         d3 = self.dec3(torch.cat([d4, e3], 1))
         d2 = self.dec2(torch.cat([d3, e2], 1))
         d1 = self.dec1(torch.cat([d2, e1], 1))
         
-        return self.tanh(self.output(d1))
+        # return self.tanh(self.output(d1))
+        return self.output(d1)
 
 
 class SimpleDiscriminator(nn.Module):
@@ -197,19 +203,22 @@ class SimpleDiscriminator(nn.Module):
     def __init__(self, input_channels=2, base_filters=16):
         super(SimpleDiscriminator, self).__init__()
         
-        self.conv1 = self._conv_block(input_channels, base_filters, 31, 2)
-        self.conv2 = self._conv_block(base_filters, base_filters * 2, 31, 2)
-        self.conv3 = self._conv_block(base_filters * 2, base_filters * 4, 31, 2)
-        self.conv4 = self._conv_block(base_filters * 4, base_filters * 8, 31, 2)
-        self.conv5 = self._conv_block(base_filters * 8, base_filters * 16, 31, 2)
+        self.conv1 = self._conv_block(input_channels, base_filters, 15, 2)
+        self.conv2 = self._conv_block(base_filters, base_filters * 2, 15, 2)
+        self.conv3 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2)
+        self.conv4 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2)
+        self.conv5 = self._conv_block(base_filters * 8, base_filters * 16, 15, 2)
         
+        # Tambah layer tambahan untuk representasi lebih dalam
+        self.conv6 = self._conv_block(base_filters * 16, base_filters * 16, 15, 1)
+
         self.output = nn.Conv1d(base_filters * 16, 1, 1)
         
     def _conv_block(self, in_c, out_c, k, s):
         return nn.Sequential(
             nn.Conv1d(in_c, out_c, k, s, k//2),
-            nn.InstanceNorm1d(out_c),
-            nn.LeakyReLU(0.2)
+            # nn.InstanceNorm1d(out_c),
+            nn.LeakyReLU(0.25)
         )
     
     def forward(self, x):
@@ -218,5 +227,6 @@ class SimpleDiscriminator(nn.Module):
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.conv5(x)
+        x = self.conv6(x)  # extra layer
         x = self.output(x)
         return torch.mean(x, dim=2)
