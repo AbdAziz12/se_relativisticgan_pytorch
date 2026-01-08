@@ -146,11 +146,11 @@ class SimpleGenerator(nn.Module):
         super(SimpleGenerator, self).__init__()
         # kernel size bisa dibuat 31
         # Encoder
-        # self.enc1 = self._conv_block(input_channels, base_filters, 15, 2)
-        # self.enc2 = self._conv_block(base_filters, base_filters * 2, 15, 2)
-        # self.enc3 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2)
-        # self.enc4 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2)
-        # self.enc5 = self._conv_block(base_filters * 8, base_filters * 16, 15, 2)
+        # self.enc1 = self._conv_block(input_channels, base_filters, 15, 2) # 1 -> 16
+        # self.enc2 = self._conv_block(base_filters, base_filters * 2, 15, 2) # 16 -> 32
+        # self.enc3 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2) # 32 -> 64
+        # self.enc4 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2) # 64 -> 128
+        # self.enc5 = self._conv_block(base_filters * 8, base_filters * 16, 15, 2) # 128 -> 256
         
         # # Bottleneck (opsional, untuk kompresi lebih)
         # self.bottleneck = self._conv_block(base_filters * 16, base_filters * 16, 15, 1)
