@@ -146,21 +146,37 @@ class SimpleGenerator(nn.Module):
         super(SimpleGenerator, self).__init__()
         # kernel size bisa dibuat 31
         # Encoder
-        self.enc1 = self._conv_block(input_channels, base_filters, 15, 2)
-        self.enc2 = self._conv_block(base_filters, base_filters * 2, 15, 2)
-        self.enc3 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2)
-        self.enc4 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2)
-        self.enc5 = self._conv_block(base_filters * 8, base_filters * 16, 15, 2)
+        # self.enc1 = self._conv_block(input_channels, base_filters, 15, 2)
+        # self.enc2 = self._conv_block(base_filters, base_filters * 2, 15, 2)
+        # self.enc3 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2)
+        # self.enc4 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2)
+        # self.enc5 = self._conv_block(base_filters * 8, base_filters * 16, 15, 2)
+        
+        # # Bottleneck (opsional, untuk kompresi lebih)
+        # self.bottleneck = self._conv_block(base_filters * 16, base_filters * 16, 15, 1)
+
+        # # Decoder
+        # self.dec5 = self._deconv_block(base_filters * 16, base_filters * 8, 15, 2)
+        # self.dec4 = self._deconv_block(base_filters * 16, base_filters * 4, 15, 2)
+        # self.dec3 = self._deconv_block(base_filters * 8, base_filters * 2, 15, 2)
+        # self.dec2 = self._deconv_block(base_filters * 4, base_filters, 15, 2)
+        # self.dec1 = self._deconv_block(base_filters * 2, base_filters, 15, 2)
+
+        self.enc1 = self._conv_block(input_channels, base_filters, 15, 2) # 1 -> 16
+        self.enc2 = self._conv_block(base_filters, base_filters * 2, 15, 2) # 16 -> 32
+        self.enc3 = self._conv_block(base_filters * 2, base_filters * 2, 15, 2) # 32 -> 32
+        self.enc4 = self._conv_block(base_filters * 2, base_filters * 4, 15, 2) # 32 -> 64
+        self.enc5 = self._conv_block(base_filters * 4, base_filters * 8, 15, 2) # 64 -> 128
         
         # Bottleneck (opsional, untuk kompresi lebih)
-        self.bottleneck = self._conv_block(base_filters * 16, base_filters * 16, 15, 1)
+        self.bottleneck = self._conv_block(base_filters * 8, base_filters * 8, 15, 1) # 128 -> 128
 
         # Decoder
-        self.dec5 = self._deconv_block(base_filters * 16, base_filters * 8, 15, 2)
-        self.dec4 = self._deconv_block(base_filters * 16, base_filters * 4, 15, 2)
-        self.dec3 = self._deconv_block(base_filters * 8, base_filters * 2, 15, 2)
-        self.dec2 = self._deconv_block(base_filters * 4, base_filters, 15, 2)
-        self.dec1 = self._deconv_block(base_filters * 2, base_filters, 15, 2)
+        self.dec5 = self._deconv_block(base_filters * 8, base_filters * 4, 15, 2) # 128 -> 64
+        self.dec4 = self._deconv_block(base_filters * 8, base_filters * 2, 15, 2) # 128 -> 32
+        self.dec3 = self._deconv_block(base_filters * 4, base_filters * 2, 15, 2) # 64 -> 32
+        self.dec2 = self._deconv_block(base_filters * 4, base_filters, 15, 2) # 64 -> 16
+        self.dec1 = self._deconv_block(base_filters * 2, base_filters, 15, 2) # 32 -> 16
         
         self.output = nn.Conv1d(base_filters, output_channels, 1)
         # self.tanh = nn.Tanh()

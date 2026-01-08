@@ -9,7 +9,8 @@ from pathlib import Path
 from config import Config
 
 # Import modules
-from models import Generator, Discriminator, SimpleGenerator, SimpleDiscriminator
+# from models import Generator, Discriminator, SimpleGenerator, SimpleDiscriminator
+from simple_models import SimpleGenerator, SimpleDiscriminator
 # from models_v2 import Generator, Discriminator
 # from train import train_sergan
 from train_v2 import train_sergan
@@ -78,17 +79,17 @@ def train(resume_from=None):
             input_channels=2, 
             base_filters=Config.BASE_FILTERS
         )
-    else:
-        print("   Using FULL models (best quality)")
-        generator = Generator(
-            input_channels=1, 
-            output_channels=1, 
-            base_filters=Config.BASE_FILTERS
-        )
-        discriminator = Discriminator(
-            input_channels=2, 
-            base_filters=Config.BASE_FILTERS
-        )
+    # else:
+    #     print("   Using FULL models (best quality)")
+    #     generator = Generator(
+    #         input_channels=1, 
+    #         output_channels=1, 
+    #         base_filters=Config.BASE_FILTERS
+    #     )
+    #     discriminator = Discriminator(
+    #         input_channels=2, 
+    #         base_filters=Config.BASE_FILTERS
+    #     )
     
     # Print model info
     ModelSizeCalculator.print_model_info(generator, "Generator")
@@ -149,8 +150,8 @@ def test():
     # 1. HARUS BUAT OBJEK GENERATOR DULU (Sesuai config)
     if Config.USE_SIMPLE_MODEL:
         generator = SimpleGenerator(base_filters=Config.BASE_FILTERS).to(device)
-    else:
-        generator = Generator(base_filters=Config.BASE_FILTERS).to(device)
+    # else:
+    #     generator = Generator(base_filters=Config.BASE_FILTERS).to(device)
     
     # Load model
     print(f"📂 Loading model from {Config.CHECKPOINT_PATH}...")
@@ -172,12 +173,12 @@ def test():
             output_channels=1,
             base_filters=Config.BASE_FILTERS
         )
-    else:
-        generator = Generator(
-            input_channels=1, 
-            output_channels=1,
-            base_filters=Config.BASE_FILTERS
-        )
+    # else:
+    #     generator = Generator(
+    #         input_channels=1, 
+    #         output_channels=1,
+    #         base_filters=Config.BASE_FILTERS
+    #     )
     
     generator.load_state_dict(checkpoint['generator_state_dict'])
     generator = generator.to(device)

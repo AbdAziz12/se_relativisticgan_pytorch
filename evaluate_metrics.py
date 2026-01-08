@@ -81,7 +81,7 @@ def evaluate_all(clean_dir, enhanced_dir):
     return pd.DataFrame(results)
 
 # Jalankan
-df = evaluate_all('./data/clean_testset_wav_16kHz', './results/model_v2/model_rasgan_45')
+df = evaluate_all('./data/clean_testset_wav_16kHz', './results/simple_konf2/simple_konf2_noresidual_40')
 
 # 2. Hitung Summary (Mean, Min, Max, Std)
 # Kita hanya menghitung kolom numerik saja
@@ -95,9 +95,9 @@ print(summary_df)
 print("="*30)
 
 # 4. Simpan Summary ke file CSV
-summary_df.to_csv('summary_metrics_model_45.csv')
+summary_df.to_csv('summary_metrics_simple_konf2_noresidual.csv')
 
 # 5. (Opsional) Tetap simpan data per file untuk backup jika dosen bertanya detail
-df.to_csv('full_details_metrics_model_45.csv', index=False)
+df.to_csv('full_details_metrics_simple_konf2_noresidual.csv', index=False)
 
-print("\nFile 'summary_metrics_model_45.csv' telah dibuat di folder utama.")
+print("\nFile 'summary_metrics_simple_konf2_noresidual.csv' telah dibuat di folder utama.")
