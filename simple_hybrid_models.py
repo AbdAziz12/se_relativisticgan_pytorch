@@ -20,45 +20,51 @@ class SimpleGenerator(nn.Module):
         self.enc4 = self._separable_conv(base_filters * 4, base_filters * 8, 15, 2)
         self.enc5 = self._separable_conv(base_filters * 8, base_filters * 16, 15, 2)
 
-        # Bottleneck (separable + residual)
-        self.bottleneck = self._separable_conv(base_filters * 16, base_filters * 16, 15, 1)
+        # Bottleneck
+        self.bottleneck = self._separable_conv(
+            base_filters * 16, base_filters * 16, 15, 1
+        )
 
         # ---------------- DECODER ----------------
-        # deconv biasa (lebih kuat untuk rekonstruksi waveform)
-        self.dec5 = self._deconv(base_filters * 16, base_filters * 8, 15, 2)
-        self.dec4 = self._deconv(base_filters * 16, base_filters * 4, 15, 2)
-        self.dec3 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
+        # dec5–dec3 : separable upsample nearest
+        self.dec5 = self._separable_upsample(base_filters * 16, base_filters * 8, 15)
+        self.dec4 = self._separable_upsample(base_filters * 16, base_filters * 4, 15)
+        # self.dec3 = self._separable_upsample(base_filters * 8, base_filters * 2, 15)
 
-        # deconv separable (hemat resource)
-        self.dec2 = self._separable_deconv(base_filters * 4, base_filters, 15, 2)
-        self.dec1 = self._separable_deconv(base_filters * 2, base_filters, 15, 2)
+        # dec3–dec1 : upsample nearest + conv biasa
+        self.dec3 = self._upsample_conv(base_filters * 8, base_filters * 2, 15)
+        self.dec2 = self._upsample_conv(base_filters * 4, base_filters, 15)
+        self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
 
         self.output = nn.Conv1d(base_filters, output_channels, 1)
 
-    # ---------------- BASIC CONV UTILITIES ----------------
+    # ---------------- BASIC CONV ----------------
     def _conv(self, in_c, out_c, k, s):
         return nn.Sequential(
             nn.Conv1d(in_c, out_c, k, s, k // 2),
             nn.PReLU()
         )
 
-    def _deconv(self, in_c, out_c, k, s):
+    # ---------------- UPSAMPLE BLOCKS ----------------
+    def _upsample_conv(self, in_c, out_c, k):
         return nn.Sequential(
-            nn.ConvTranspose1d(in_c, out_c, k, s, k // 2, s - 1),
+            nn.Upsample(scale_factor=2, mode="nearest"),
+            nn.Conv1d(in_c, out_c, k, stride=1, padding=k // 2),
             nn.PReLU()
         )
 
-    # ---------------- SEPARABLE UTILITIES ----------------
-    def _separable_conv(self, in_c, out_c, k, s):
+    def _separable_upsample(self, in_c, out_c, k):
         return nn.Sequential(
-            nn.Conv1d(in_c, in_c, k, s, k // 2, groups=in_c),
+            nn.Upsample(scale_factor=2, mode="nearest"),
+            nn.Conv1d(in_c, in_c, k, stride=1, padding=k // 2, groups=in_c),
             nn.Conv1d(in_c, out_c, 1),
             nn.PReLU()
         )
 
-    def _separable_deconv(self, in_c, out_c, k, s):
+    # ---------------- SEPARABLE CONV ----------------
+    def _separable_conv(self, in_c, out_c, k, s):
         return nn.Sequential(
-            nn.ConvTranspose1d(in_c, in_c, k, s, k // 2, s - 1, groups=in_c),
+            nn.Conv1d(in_c, in_c, k, s, k // 2, groups=in_c),
             nn.Conv1d(in_c, out_c, 1),
             nn.PReLU()
         )
