@@ -36,6 +36,16 @@ class SimpleGenerator(nn.Module):
         self.dec2 = self._upsample_conv(base_filters * 4, base_filters, 15)
         self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
 
+        # # ---------------- DECODER ----------------
+        # # deconv biasa (lebih kuat untuk rekonstruksi waveform)
+        # self.dec5 = self._deconv(base_filters * 16, base_filters * 8, 15, 2)
+        # self.dec4 = self._deconv(base_filters * 16, base_filters * 4, 15, 2)
+        # self.dec3 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
+
+        # # deconv separable (hemat resource)
+        # self.dec2 = self._separable_deconv(base_filters * 4, base_filters, 15, 2)
+        # self.dec1 = self._separable_deconv(base_filters * 2, base_filters, 15, 2)
+
         self.output = nn.Conv1d(base_filters, output_channels, 1)
 
     # ---------------- BASIC CONV ----------------
@@ -44,6 +54,19 @@ class SimpleGenerator(nn.Module):
             nn.Conv1d(in_c, out_c, k, s, k // 2),
             nn.PReLU()
         )
+    
+    # def _deconv(self, in_c, out_c, k, s):
+    #     return nn.Sequential(
+    #         nn.ConvTranspose1d(in_c, out_c, k, s, k // 2, s - 1),
+    #         nn.PReLU()
+    #     )
+    
+    # def _separable_deconv(self, in_c, out_c, k, s):
+    #     return nn.Sequential(
+    #         nn.ConvTranspose1d(in_c, in_c, k, s, k // 2, s - 1, groups=in_c),
+    #         nn.Conv1d(in_c, out_c, 1),
+    #         nn.PReLU()
+    #     )
 
     # ---------------- UPSAMPLE BLOCKS ----------------
     def _upsample_conv(self, in_c, out_c, k):
