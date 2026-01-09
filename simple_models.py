@@ -78,7 +78,7 @@ class SimpleGenerator(nn.Module):
         e5 = self.enc5(e4)
 
         b = self.bottleneck(e5)
-        b = b + e5 # Residual Connection
+        b = (b + e5) * 0.5 # Residual Connection
         
         d5 = self.dec5(b)
         d4 = self.dec4(torch.cat([d5, e4], 1))
