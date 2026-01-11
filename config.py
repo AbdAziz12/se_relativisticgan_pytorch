@@ -64,15 +64,15 @@ class Config:
     
     # Single file mode
     INPUT_FILE = './my_speech_pink.wav'  # 👈 Input file untuk enhancement
-    OUTPUT_FILE = './enhanced_single_file/model_rasgan_10_v2_pink.wav'  # 👈 Output file
+    OUTPUT_FILE = './enhanced_single_file/model_hybrid_v2_pink.wav'  # 👈 Output file
     
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/simple_hybrid/epoch_40'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/simple_hybrid/epoch_v216_1'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints_hybrid/checkpoint_epoch_40.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints_hybrid/checkpoint_epoch_v216_1.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)

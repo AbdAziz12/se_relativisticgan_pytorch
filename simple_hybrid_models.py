@@ -25,16 +25,26 @@ class SimpleGenerator(nn.Module):
             base_filters * 16, base_filters * 16, 15, 1
         )
 
+        # # ---------------- DECODER ----------------
+        # # dec5–dec3 : separable upsample nearest
+        # self.dec5 = self._separable_upsample(base_filters * 16, base_filters * 8, 15)
+        # self.dec4 = self._separable_upsample(base_filters * 16, base_filters * 4, 15)
+        # # self.dec3 = self._separable_upsample(base_filters * 8, base_filters * 2, 15)
+
+        # # dec3–dec1 : upsample nearest + conv biasa
+        # self.dec3 = self._upsample_conv(base_filters * 8, base_filters * 2, 15)
+        # self.dec2 = self._upsample_conv(base_filters * 4, base_filters, 15)
+        # self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
+
         # ---------------- DECODER ----------------
-        # dec5–dec3 : separable upsample nearest
-        self.dec5 = self._separable_upsample(base_filters * 16, base_filters * 8, 15)
-        self.dec4 = self._separable_upsample(base_filters * 16, base_filters * 4, 15)
-        # self.dec3 = self._separable_upsample(base_filters * 8, base_filters * 2, 15)
+        # dec5–dec4 : separable upsample nearest
+        self.dec5 = self._separable_deconv(base_filters * 16, base_filters * 8, 15, 2)
+        self.dec4 = self._separable_deconv(base_filters * 16, base_filters * 4, 15, 2)
 
         # dec3–dec1 : upsample nearest + conv biasa
-        self.dec3 = self._upsample_conv(base_filters * 8, base_filters * 2, 15)
-        self.dec2 = self._upsample_conv(base_filters * 4, base_filters, 15)
-        self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
+        self.dec3 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
+        self.dec2 = self._deconv(base_filters * 4, base_filters, 15, 2)
+        self.dec1 = self._deconv(base_filters * 2, base_filters, 15, 2)
 
         # # ---------------- DECODER ----------------
         # # deconv biasa (lebih kuat untuk rekonstruksi waveform)
@@ -55,18 +65,18 @@ class SimpleGenerator(nn.Module):
             nn.PReLU()
         )
     
-    # def _deconv(self, in_c, out_c, k, s):
-    #     return nn.Sequential(
-    #         nn.ConvTranspose1d(in_c, out_c, k, s, k // 2, s - 1),
-    #         nn.PReLU()
-    #     )
+    def _deconv(self, in_c, out_c, k, s):
+        return nn.Sequential(
+            nn.ConvTranspose1d(in_c, out_c, k, s, k // 2, s - 1),
+            nn.PReLU()
+        )
     
-    # def _separable_deconv(self, in_c, out_c, k, s):
-    #     return nn.Sequential(
-    #         nn.ConvTranspose1d(in_c, in_c, k, s, k // 2, s - 1, groups=in_c),
-    #         nn.Conv1d(in_c, out_c, 1),
-    #         nn.PReLU()
-    #     )
+    def _separable_deconv(self, in_c, out_c, k, s):
+        return nn.Sequential(
+            nn.ConvTranspose1d(in_c, in_c, k, s, k // 2, s - 1, groups=in_c),
+            nn.Conv1d(in_c, out_c, 1),
+            nn.PReLU()
+        )
 
     # ---------------- UPSAMPLE BLOCKS ----------------
     def _upsample_conv(self, in_c, out_c, k):
