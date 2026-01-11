@@ -8,7 +8,7 @@ class Config:
     
     # =================== MODE OPERASI ===================
     # Pilih mode: 'train' atau 'test'
-    MODE = 'test'  # 👈 UBAH DI SINI: 'train' atau 'test'
+    MODE = 'train'  # 👈 UBAH DI SINI: 'train' atau 'test'
     
     # =================== DEVICE SETTINGS ===================
     USE_DIRECTML = False  # 👈 True untuk AMD/Intel GPU, False untuk CUDA/CPU
