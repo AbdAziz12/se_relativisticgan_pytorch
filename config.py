@@ -36,8 +36,11 @@ class Config:
 
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
-    NOISY_TRAIN_DIR = './data/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
-    CLEAN_TRAIN_DIR = './data/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
+    # NOISY_TRAIN_DIR = './data/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
+    # CLEAN_TRAIN_DIR = './data/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
+
+    NOISY_TRAIN_DIR = '/kaggle/input/dataset-sergan/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
+    CLEAN_TRAIN_DIR = '/kaggle/input/dataset-sergan/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
     
     # Lazy load: True = load dari disk per batch (hemat RAM), False = load semua ke memory
     LAZY_LOAD = False  # 👈 UBAH DI SINI jika RAM terbatas
@@ -55,7 +58,7 @@ class Config:
     PREEMPH_COEFF = 0.95
     
     # =================== SAVE SETTINGS ===================
-    SAVE_DIR = 'checkpoints'  # Directory untuk save checkpoints
+    SAVE_DIR = 'checkpoints_hybrid'  # Directory untuk save checkpoints
     
     # =================== TESTING SETTINGS ===================
     # Pilih mode testing: 'single_file' atau 'testset'
