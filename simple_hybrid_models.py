@@ -29,12 +29,21 @@ class SimpleGenerator(nn.Module):
         # # dec5–dec3 : separable upsample nearest
         # self.dec5 = self._separable_upsample(base_filters * 16, base_filters * 8, 15)
         # self.dec4 = self._separable_upsample(base_filters * 16, base_filters * 4, 15)
-        # # self.dec3 = self._separable_upsample(base_filters * 8, base_filters * 2, 15)
 
         # # dec3–dec1 : upsample nearest + conv biasa
         # self.dec3 = self._upsample_conv(base_filters * 8, base_filters * 2, 15)
         # self.dec2 = self._upsample_conv(base_filters * 4, base_filters, 15)
         # self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
+
+        # # ---------------- DECODER ----------------
+        # # dec5–dec3 : upsample nearest + conv biasa
+        # self.dec5 = self._upsample_conv(base_filters * 16, base_filters * 8, 15)
+        # self.dec4 = self._upsample_conv(base_filters * 16, base_filters * 4, 15)
+        # self.dec3 = self._upsample_conv(base_filters * 8, base_filters * 2, 15)
+
+        # # dec2–dec1 : upsample nearest + conv biasa
+        # self.dec2 = self._separable_upsample(base_filters * 4, base_filters, 15)
+        # self.dec1 = self._separable_upsample(base_filters * 2, base_filters, 15)
 
         # ---------------- DECODER ----------------
         # dec5–dec4 : separable upsample nearest
@@ -47,7 +56,7 @@ class SimpleGenerator(nn.Module):
         self.dec1 = self._deconv(base_filters * 2, base_filters, 15, 2)
 
         # # ---------------- DECODER ----------------
-        # # deconv biasa (lebih kuat untuk rekonstruksi waveform)
+        # # deconv biasa
         # self.dec5 = self._deconv(base_filters * 16, base_filters * 8, 15, 2)
         # self.dec4 = self._deconv(base_filters * 16, base_filters * 4, 15, 2)
         # self.dec3 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
