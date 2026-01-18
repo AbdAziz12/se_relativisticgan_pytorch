@@ -8,7 +8,7 @@ class Config:
     
     # =================== MODE OPERASI ===================
     # Pilih mode: 'train' atau 'test'
-    MODE = 'train'  # 👈 UBAH DI SINI: 'train' atau 'test'
+    MODE = 'test'  # 👈 UBAH DI SINI: 'train' atau 'test'
     
     # =================== DEVICE SETTINGS ===================
     USE_DIRECTML = False  # 👈 True untuk AMD/Intel GPU, False untuk CUDA/CPU
@@ -16,7 +16,7 @@ class Config:
     # =================== MODEL SETTINGS ===================
     # True = model simple (hemat RAM), False = model full (best quality)
     USE_SIMPLE_MODEL = True  # 👈 UBAH DI SINI
-    BASE_FILTERS = 8  # 👈 16 untuk full quality, 8 atau 4 untuk hemat memory
+    BASE_FILTERS = 10  # 👈 16 untuk full quality, 8 atau 4 untuk hemat memory
     
     # =================== TRAINING SETTINGS ===================
     # GAN Type: 'lsgan', 'wgan-gp', 'rsgan-gp', 'rasgan-gp', 'ralsgan-gp'
@@ -36,11 +36,11 @@ class Config:
 
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
-    # NOISY_TRAIN_DIR = './data/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
-    # CLEAN_TRAIN_DIR = './data/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
+    NOISY_TRAIN_DIR = './data/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
+    CLEAN_TRAIN_DIR = './data/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
 
-    NOISY_TRAIN_DIR = '/kaggle/input/dataset-sergan/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
-    CLEAN_TRAIN_DIR = '/kaggle/input/dataset-sergan/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
+    # NOISY_TRAIN_DIR = '/kaggle/input/dataset-sergan/noisy_trainset_56spk_wav_16kHz'  # 👈 Path dataset noisy train
+    # CLEAN_TRAIN_DIR = '/kaggle/input/dataset-sergan/clean_trainset_56spk_wav_16kHz'  # 👈 Path dataset clean train
     
     # Lazy load: True = load dari disk per batch (hemat RAM), False = load semua ke memory
     LAZY_LOAD = False  # 👈 UBAH DI SINI jika RAM terbatas
@@ -72,10 +72,10 @@ class Config:
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/simple_hybrid/epoch_v216_1'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/simple_hybrid/epoch_v5_61'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints_hybrid/checkpoint_epoch_v216_1.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints_hybrid/checkpoint_epoch_v5_61.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
     SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)
