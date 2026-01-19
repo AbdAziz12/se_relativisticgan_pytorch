@@ -296,9 +296,3 @@ MIT License - feel free to use for your projects!
 ## 🤝 Contributing
 
 Contributions welcome! Feel free to open issues or submit PRs.
-
-## ⭐ Acknowledgments
-
-- Original SERGAN implementation by Deepak Baby
-- PyTorch team for excellent framework
-- DirectML team for AMD/Intel GPU support
