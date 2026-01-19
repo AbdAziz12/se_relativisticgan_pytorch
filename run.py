@@ -11,7 +11,7 @@ from config import Config
 # Import modules
 # from models import Generator, Discriminator, SimpleGenerator, SimpleDiscriminator
 # from simple_models import SimpleGenerator, SimpleDiscriminator
-from simple_hybrid_models import SimpleGenerator, SimpleDiscriminator
+from simple_hybrid_models_v3 import SimpleGenerator, SimpleDiscriminator
 # from models_v2 import Generator, Discriminator
 # from train import train_sergan
 from train_v2 import train_sergan

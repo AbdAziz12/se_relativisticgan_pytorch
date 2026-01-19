@@ -16,7 +16,7 @@ class Config:
     # =================== MODEL SETTINGS ===================
     # True = model simple (hemat RAM), False = model full (best quality)
     USE_SIMPLE_MODEL = True  # 👈 UBAH DI SINI
-    BASE_FILTERS = 10  # 👈 16 untuk full quality, 8 atau 4 untuk hemat memory
+    BASE_FILTERS = 8  # 👈 16 untuk full quality, 8 atau 4 untuk hemat memory
     
     # =================== TRAINING SETTINGS ===================
     # GAN Type: 'lsgan', 'wgan-gp', 'rsgan-gp', 'rasgan-gp', 'ralsgan-gp'
@@ -72,13 +72,13 @@ class Config:
     # Testset mode
     TEST_NOISY_DIR = './data/noisy_testset_wav_16kHz'  # 👈 Path testset noisy
     TEST_CLEAN_DIR = './data/clean_testset_wav_16kHz'  # 👈 Path testset clean (optional, untuk SNR)
-    TEST_OUTPUT_DIR = './results/simple_hybrid/epoch_v5_61'  # 👈 Output directory
+    TEST_OUTPUT_DIR = './results/simple_dilated/epoch_k7_79'  # 👈 Output directory
     
     # Model checkpoint untuk testing
-    CHECKPOINT_PATH = 'checkpoints_hybrid/checkpoint_epoch_v5_61.pt'  # 👈 Path ke trained model
+    CHECKPOINT_PATH = 'checkpoints_dilated/checkpoint_epoch_k7_79.pt'  # 👈 Path ke trained model
     
     # =================== ADVANCED SETTINGS ===================
-    SAVE_EVERY_N_EPOCHS = 5  # Save checkpoint setiap N epochs (asli 10)
+    SAVE_EVERY_N_EPOCHS = 1  # Save checkpoint setiap N epochs (asli 10)
     
     @classmethod
     def print_config(cls):
