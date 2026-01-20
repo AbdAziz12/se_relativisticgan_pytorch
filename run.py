@@ -11,7 +11,9 @@ from config import Config
 # Import modules
 # from models import Generator, Discriminator, SimpleGenerator, SimpleDiscriminator
 # from simple_models import SimpleGenerator, SimpleDiscriminator
-from simple_hybrid_models_v3 import SimpleGenerator, SimpleDiscriminator
+# from simple_hybrid_models_v3 import SimpleGenerator, SimpleDiscriminator
+# from simple_final_models import SimpleGenerator, SimpleDiscriminator
+from simple_masked_models import SimpleGenerator, SimpleDiscriminator
 # from models_v2 import Generator, Discriminator
 # from train import train_sergan
 from train_v2 import train_sergan
@@ -147,42 +149,32 @@ def test():
     
     # Get device
     device = get_device(prefer_directml=Config.USE_DIRECTML)
-
-    # 1. HARUS BUAT OBJEK GENERATOR DULU (Sesuai config)
-    if Config.USE_SIMPLE_MODEL:
-        generator = SimpleGenerator(base_filters=Config.BASE_FILTERS).to(device)
-    # else:
-    #     generator = Generator(base_filters=Config.BASE_FILTERS).to(device)
     
     # Load model
     print(f"📂 Loading model from {Config.CHECKPOINT_PATH}...")
     try:
         checkpoint = torch.load(Config.CHECKPOINT_PATH, map_location=device)
-        if isinstance(checkpoint, dict) and 'generator_state_dict' in checkpoint:
-            generator.load_state_dict(checkpoint['generator_state_dict'])
-        else:
-            generator.load_state_dict(checkpoint)
     except FileNotFoundError:
         print(f"❌ Error: Checkpoint file not found at {Config.CHECKPOINT_PATH}")
         print("   Please train a model first or check the path!")
         return
     
-    # Create generator
+    # Create generator (HANYA SEKALI!)
     if Config.USE_SIMPLE_MODEL:
         generator = SimpleGenerator(
             input_channels=1, 
             output_channels=1,
             base_filters=Config.BASE_FILTERS
-        )
-    # else:
-    #     generator = Generator(
-    #         input_channels=1, 
-    #         output_channels=1,
-    #         base_filters=Config.BASE_FILTERS
-    #     )
+        ).to(device)
+    # else: ... untuk model lain
     
-    generator.load_state_dict(checkpoint['generator_state_dict'])
-    generator = generator.to(device)
+    # Load weights
+    if isinstance(checkpoint, dict) and 'generator_state_dict' in checkpoint:
+        generator.load_state_dict(checkpoint['generator_state_dict'])
+    else:
+        # Jika checkpoint langsung adalah state_dict
+        generator.load_state_dict(checkpoint)
+    
     generator.eval()
     
     print("✅ Model loaded successfully!")
