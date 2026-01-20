@@ -57,7 +57,7 @@ sergan_pytorch/
 
 ## 🚀 Quick Start
 
-### Method 1: Edit Config & Run (RECOMMENDED ⭐)
+### Method 1: Edit Config & Run (RECOMMENDED)
 
 ```bash
 # 1. Edit config.py
@@ -65,8 +65,6 @@ sergan_pytorch/
 
 # 2. Run
 python run.py
-
-# That's it! ✅
 ```
 
 ### Method 2: Command Line (Advanced)
@@ -174,55 +172,12 @@ python main.py --mode test \
 - `--test-clean-dir`: Directory dengan test clean files (optional, untuk SNR calculation)
 - `--test-output-dir`: Output directory untuk enhanced test files (default: `enhanced_testset`)
 
-## 💻 Spesifikasi untuk Laptop Anda (Ryzen 5 5500U)
-
-### Recommended Settings
-
-```bash
-# Training dengan model simple
-python main.py --mode train \
-    --simple \
-    --use-directml \
-    --gan-type rasgan-gp \
-    --epochs 50 \
-    --batch-size 2 \
-    --base-filters 8 \
-    --num-samples 50
-
-# Jika masih terlalu berat, reduce lebih lanjut:
-python main.py --mode train \
-    --simple \
-    --use-directml \
-    --gan-type lsgan \
-    --epochs 20 \
-    --batch-size 1 \
-    --base-filters 8
-```
-
 ### Tips untuk Optimasi
 1. Gunakan `--simple` flag untuk model yang lebih kecil
 2. Reduce `--base-filters` dari 16 ke 8 atau 4
 3. Gunakan `--batch-size 1` atau `2`
 4. Pilih `lsgan` atau `wgan-gp` untuk training lebih cepat
 5. Set `--window-size 8192` untuk reduce memory usage
-
-## 📊 Model Comparison
-
-| Model | Parameters | Memory | Speed | Quality |
-|-------|-----------|--------|-------|---------|
-| Full Generator | ~8M | ~4GB | Slow | Best |
-| Simple Generator | ~2M | ~1GB | Medium | Good |
-| Simple + reduce filters | ~500K | ~500MB | Fast | Acceptable |
-
-## 🎯 GAN Type Comparison
-
-| GAN Type | Training Speed | Stability | Quality |
-|----------|---------------|-----------|---------|
-| LSGAN | Fast | Good | Good |
-| WGAN-GP | Medium | Very Good | Good |
-| RSGAN-GP | Medium | Good | Better |
-| RaSGAN-GP | Slow | Very Good | Best |
-| RaLSGAN-GP | Slow | Very Good | Best |
 
 ## 📝 Examples
 
@@ -341,9 +296,3 @@ MIT License - feel free to use for your projects!
 ## 🤝 Contributing
 
 Contributions welcome! Feel free to open issues or submit PRs.
-
-## ⭐ Acknowledgments
-
-- Original SERGAN implementation by Deepak Baby
-- PyTorch team for excellent framework
-- DirectML team for AMD/Intel GPU support
