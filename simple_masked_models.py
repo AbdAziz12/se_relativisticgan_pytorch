@@ -8,22 +8,41 @@ class SimpleGenerator(nn.Module):
     def __init__(self, input_channels=1, output_channels=1, base_filters=8):
         super(SimpleGenerator, self).__init__()
 
+        # # ---------------- ENCODER V4 ----------------
+        # self.enc1 = self._conv(input_channels, base_filters, 15, 2)
+        # self.enc2 = self._conv(base_filters, base_filters * 2, 15, 2)
+        # self.enc3 = self._conv(base_filters * 2, base_filters * 4, 15, 2)
+
+        # self.enc4 = self._separable_conv(base_filters * 4, base_filters * 8, 15, 2)
+        # self.enc5 = self._separable_conv(base_filters * 8, base_filters * 16, 15, 2)
+
+        # # Bottleneck
+        # self.bottleneck = self._res_block(base_filters * 16, 7)
+
+        # # ---------------- DECODER V4 ----------------
+        # self.dec5 = self._separable_deconv(base_filters * 16, base_filters * 8, 15, 2)
+        # self.dec4 = self._separable_deconv(base_filters * 16, base_filters * 4, 15, 2)
+
+        # self.dec3 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
+        # self.dec2 = self._deconv(base_filters * 4, base_filters, 15, 2)
+        # self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
+
         # ---------------- ENCODER V4 ----------------
         self.enc1 = self._conv(input_channels, base_filters, 15, 2)
         self.enc2 = self._conv(base_filters, base_filters * 2, 15, 2)
-        self.enc3 = self._conv(base_filters * 2, base_filters * 4, 15, 2)
+        self.enc3 = self._conv(base_filters * 2, base_filters * 2, 15, 2)
 
-        self.enc4 = self._separable_conv(base_filters * 4, base_filters * 8, 15, 2)
-        self.enc5 = self._separable_conv(base_filters * 8, base_filters * 16, 15, 2)
+        self.enc4 = self._conv(base_filters * 2, base_filters * 4, 15, 2)
+        self.enc5 = self._conv(base_filters * 4, base_filters * 8, 15, 2)
 
         # Bottleneck
-        self.bottleneck = self._res_block(base_filters * 16, 7)
+        self.bottleneck = self._res_block(base_filters * 8, 7)
 
         # ---------------- DECODER V4 ----------------
-        self.dec5 = self._separable_deconv(base_filters * 16, base_filters * 8, 15, 2)
-        self.dec4 = self._separable_deconv(base_filters * 16, base_filters * 4, 15, 2)
+        self.dec5 = self._deconv(base_filters * 8, base_filters * 4, 15, 2)
+        self.dec4 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
 
-        self.dec3 = self._deconv(base_filters * 8, base_filters * 2, 15, 2)
+        self.dec3 = self._deconv(base_filters * 4, base_filters * 2, 15, 2)
         self.dec2 = self._deconv(base_filters * 4, base_filters, 15, 2)
         self.dec1 = self._upsample_conv(base_filters * 2, base_filters, 15)
 
@@ -86,7 +105,8 @@ class SimpleGenerator(nn.Module):
     def _output_mask(self, in_c, out_c, k):
         return nn.Sequential(
             nn.Conv1d(in_c, out_c, k),
-            nn.Sigmoid()
+            # nn.Sigmoid()
+            nn.Tanh()
         )
 
     def forward(self, x):
@@ -108,7 +128,7 @@ class SimpleGenerator(nn.Module):
         mask = self.output(d1)
 
         # return self.output(d1)
-        return mask * x
+        return mask + x
 
 # ==========================================================
 # Hybrid Discriminator:
@@ -117,15 +137,25 @@ class SimpleDiscriminator(nn.Module):
     def __init__(self, input_channels=2, base_filters=8):
         super(SimpleDiscriminator, self).__init__()
 
+        # # V4
+        # self.conv1 = self._conv(input_channels, base_filters, 15, 2)
+        # self.conv2 = self._conv(base_filters, base_filters * 2, 15, 2)
+        # self.conv3 = self._conv(base_filters * 2, base_filters * 4, 15, 2)
+
+        # self.conv4 = self._separable_conv(base_filters * 4, base_filters * 8, 15, 2)
+        # self.conv5 = self._separable_conv(base_filters * 8, base_filters * 16, 15, 2)
+
+        # self.output = nn.Conv1d(base_filters * 16, 1, 1)
+
         # V4
         self.conv1 = self._conv(input_channels, base_filters, 15, 2)
         self.conv2 = self._conv(base_filters, base_filters * 2, 15, 2)
-        self.conv3 = self._conv(base_filters * 2, base_filters * 4, 15, 2)
+        self.conv3 = self._conv(base_filters * 2, base_filters * 2, 15, 2)
 
-        self.conv4 = self._separable_conv(base_filters * 4, base_filters * 8, 15, 2)
-        self.conv5 = self._separable_conv(base_filters * 8, base_filters * 16, 15, 2)
+        self.conv4 = self._conv(base_filters * 2, base_filters * 4, 15, 2)
+        self.conv5 = self._conv(base_filters * 4, base_filters * 8, 15, 2)
 
-        self.output = nn.Conv1d(base_filters * 16, 1, 1)
+        self.output = nn.Conv1d(base_filters * 8, 1, 1)
 
     # ---- Utilities ----
     def _conv(self, in_c, out_c, k, s):
