@@ -32,7 +32,7 @@ class Config:
     ENVELOPE_LOSS_WEIGHT = 0.05  # 👈 Start dengan 0.04 (2% dari L1 weight 200)
 
     # Resume Training
-    RESUME_FROM = 'checkpoint_epoch_v8_71.pt'
+    RESUME_FROM = 'checkpoints_masked/checkpoint_epoch_v8_71.pt'
 
     # =================== DATASET SETTINGS ===================
     # Path ke dataset Anda
